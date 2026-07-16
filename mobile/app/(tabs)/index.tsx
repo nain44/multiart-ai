@@ -155,13 +155,6 @@ export default function HomeScreen() {
       {/* Hero Header */}
       <View style={styles.hero}>
         <View style={styles.heroGlow} />
-        <Text style={styles.heroTitle}>
-          {'Stunning\n'}
-          <Text style={styles.heroAccent}>Wallpapers</Text>
-        </Text>
-        <Text style={styles.heroSub}>
-          Thousands of free 4K wallpapers for your Android phone
-        </Text>
         <Pressable
           style={styles.browseBtn}
           onPress={() => router.push('/browse')}
