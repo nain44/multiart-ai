@@ -12,12 +12,12 @@ interface Props {
 }
 
 export default function MasonryGrid({ wallpapers }: Props) {
-  const first12 = wallpapers.slice(0, 12);
-  const remaining = wallpapers.slice(12);
+  const first6 = wallpapers.slice(0, 6);
+  const remaining = wallpapers.slice(6);
 
   const left1: Wallpaper[] = [];
   const right1: Wallpaper[] = [];
-  first12.forEach((wp, i) => {
+  first6.forEach((wp, i) => {
     if (i % 2 === 0) left1.push(wp);
     else right1.push(wp);
   });
@@ -44,8 +44,8 @@ export default function MasonryGrid({ wallpapers }: Props) {
         </View>
       </View>
 
-      {/* Banner Ad after 6 rows (12 items) */}
-      {wallpapers.length > 12 && (
+      {/* Banner Ad after 6 wallpapers */}
+      {wallpapers.length > 6 && (
         <View style={{ marginVertical: 8 }}>
           <BannerAdComponent />
         </View>
