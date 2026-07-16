@@ -188,8 +188,6 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {/* Banner Ad */}
-      <BannerAdComponent />
 
       {/* Featured Wallpapers */}
       <View style={styles.section}>
