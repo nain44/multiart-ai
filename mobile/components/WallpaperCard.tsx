@@ -3,7 +3,6 @@ import { Pressable, StyleSheet, Text, View, Dimensions } from 'react-native';
 import { router } from 'expo-router';
 import { Colors, Radius } from '@/constants/Colors';
 import { Wallpaper } from '@/lib/api';
-import { showInterstitialAd } from '@/lib/adService';
 
 const { width } = Dimensions.get('window');
 const COLUMN_GAP = 12;
@@ -20,8 +19,7 @@ export default function WallpaperCard({ wallpaper, tall = false }: Props) {
 
   return (
     <Pressable
-      onPress={async () => {
-        await showInterstitialAd();
+      onPress={() => {
         router.push(`/wallpaper/${wallpaper._id}` as any);
       }}
       style={({ pressed }) => [styles.card, { height: cardHeight, opacity: pressed ? 0.92 : 1 }]}

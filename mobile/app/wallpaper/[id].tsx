@@ -19,7 +19,7 @@ import { saveImageToGallery } from '@/lib/download';
 import { toggleFavorite, isFavorite } from '@/lib/storage';
 import { Colors, Spacing, Radius } from '@/constants/Colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { showRewardedAd } from '@/lib/adService';
+import { showRewardedAd, showInterstitialAd } from '@/lib/adService';
 import { usePremium } from '@/components/PremiumContext';
 
 const { width, height } = Dimensions.get('window');
@@ -138,6 +138,11 @@ export default function WallpaperDetailScreen() {
     try {
       await saveImageToGallery(wallpaper.imageUrl, wallpaper._id);
       api.trackDownload(wallpaper._id).catch(() => {});
+      
+      if (!isPremium) {
+        await showInterstitialAd();
+      }
+
       showCustomAlert(
         'Saved to Gallery',
         'Open your Gallery app, then long-press the image to set it as your wallpaper.',
@@ -198,6 +203,11 @@ export default function WallpaperDetailScreen() {
         return;
       }
       await RnExpoWallpaperManager.setWallpaperFromUrl(wallpaper.imageUrl, type);
+      
+      if (!isPremium) {
+        await showInterstitialAd();
+      }
+
       showCustomAlert('Success', 'Wallpaper has been updated!', '✅');
     } catch (e: any) {
       console.error(e);

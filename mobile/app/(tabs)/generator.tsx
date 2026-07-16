@@ -14,10 +14,13 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
+import { router, useNavigation } from 'expo-router';
 import { api, Wallpaper } from '@/lib/api';
 import { Colors, Radius, Spacing } from '@/constants/Colors';
 import FancyAlert, { AlertButton } from '@/components/FancyAlert';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { showRewardedAd } from '@/lib/adService';
+import { usePremium } from '@/components/PremiumContext';
 
 const { width } = Dimensions.get('window');
 
@@ -58,6 +61,32 @@ export default function AIGeneratorScreen() {
     buttons: [],
   });
 
+  const { isPremium } = usePremium();
+  const [remainingCreations, setRemainingCreations] = useState(3);
+  const navigation = useNavigation();
+
+  async function loadCreations() {
+    try {
+      const val = await AsyncStorage.getItem('remaining_creations');
+      if (val !== null) {
+        setRemainingCreations(parseInt(val, 10));
+      } else {
+        await AsyncStorage.setItem('remaining_creations', '3');
+        setRemainingCreations(3);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  useEffect(() => {
+    loadCreations();
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadCreations();
+    });
+    return unsubscribe;
+  }, [navigation]);
+
   const showCustomAlert = (title: string, message: string, icon: string, buttons?: AlertButton[]) => {
     setFancyAlert({
       visible: true,
@@ -88,6 +117,32 @@ export default function AIGeneratorScreen() {
       return;
     }
 
+    if (!isPremium && remainingCreations === 0) {
+      showCustomAlert(
+        'No Creations Left',
+        'You have used all your free AI creations. Watch a quick video ad to get 3 more creations!',
+        '📺',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Watch Ad',
+            onPress: async () => {
+              const success = await showRewardedAd();
+              if (success) {
+                const next = 3;
+                await AsyncStorage.setItem('remaining_creations', next.toString());
+                setRemainingCreations(next);
+                showCustomAlert('Reward Granted', 'You have successfully earned 3 AI Creations! Tap generate again to create your wallpaper.', '🎉');
+              } else {
+                showCustomAlert('Ad Closed', 'You must finish watching the ad to earn the creations reward.', '⚠️');
+              }
+            }
+          }
+        ]
+      );
+      return;
+    }
+
     Keyboard.dismiss();
     setGenerating(true);
     setGeneratedWp(null);
@@ -95,6 +150,12 @@ export default function AIGeneratorScreen() {
     try {
       const wallpaper = await api.generateAI(prompt);
       setGeneratedWp(wallpaper);
+
+      if (!isPremium) {
+        const next = Math.max(0, remainingCreations - 1);
+        await AsyncStorage.setItem('remaining_creations', next.toString());
+        setRemainingCreations(next);
+      }
     } catch (e: any) {
       console.error(e);
       showCustomAlert(
@@ -128,8 +189,17 @@ export default function AIGeneratorScreen() {
       />
 
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>AI Art Generator</Text>
-        <Text style={styles.headerSubtitle}>Create unique wallpapers from text</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View>
+            <Text style={styles.headerTitle}>AI Art Generator</Text>
+            <Text style={styles.headerSubtitle}>Create unique wallpapers from text</Text>
+          </View>
+          {!isPremium && (
+            <View style={styles.creationsBadge}>
+              <Text style={styles.creationsBadgeText}>🎨 {remainingCreations} left</Text>
+            </View>
+          )}
+        </View>
       </View>
 
       <ScrollView 
@@ -450,6 +520,19 @@ const styles = StyleSheet.create({
   resetBtnText: {
     color: Colors.textMuted,
     fontSize: 15,
+    fontWeight: '700',
+  },
+  creationsBadge: {
+    backgroundColor: 'rgba(139,92,246,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(139,92,246,0.3)',
+    borderRadius: Radius.full,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  creationsBadgeText: {
+    color: '#a78bfa',
+    fontSize: 12,
     fontWeight: '700',
   },
 });

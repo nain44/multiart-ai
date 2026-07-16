@@ -4,6 +4,7 @@ import {
   Dimensions, RefreshControl,
 } from 'react-native';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { api, Wallpaper, Category } from '@/lib/api';
 import { Colors, Spacing, Radius } from '@/constants/Colors';
@@ -11,6 +12,10 @@ import MasonryGrid from '@/components/MasonryGrid';
 import CategoryChip from '@/components/CategoryChip';
 import SkeletonGrid from '@/components/SkeletonCard';
 import BannerAdComponent from '@/components/BannerAdComponent';
+import FancyAlert, { AlertButton } from '@/components/FancyAlert';
+import { showRewardedAd } from '@/lib/adService';
+import { usePremium } from '@/components/PremiumContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
@@ -21,8 +26,83 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const { isPremium } = usePremium();
+  const [remainingCreations, setRemainingCreations] = useState(3);
+  const [fancyAlert, setFancyAlert] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    icon: string;
+    buttons: AlertButton[];
+  }>({
+    visible: false,
+    title: '',
+    message: '',
+    icon: '💡',
+    buttons: [],
+  });
+
+  const showCustomAlert = (title: string, message: string, icon: string, buttons?: AlertButton[]) => {
+    setFancyAlert({
+      visible: true,
+      title,
+      message,
+      icon,
+      buttons: buttons || [],
+    });
+  };
+
+  async function loadCreations() {
+    try {
+      const val = await AsyncStorage.getItem('remaining_creations');
+      if (val !== null) {
+        setRemainingCreations(parseInt(val, 10));
+      } else {
+        await AsyncStorage.setItem('remaining_creations', '3');
+        setRemainingCreations(3);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function handleWatchAdForCreations() {
+    showCustomAlert(
+      'Watch Video Ad',
+      'Watch a short video ad to earn 3 free AI creations!',
+      '📺',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Watch Ad',
+          onPress: async () => {
+            const success = await showRewardedAd();
+            if (success) {
+              const current = remainingCreations;
+              const next = current + 3;
+              await AsyncStorage.setItem('remaining_creations', next.toString());
+              setRemainingCreations(next);
+              showCustomAlert(
+                'Reward Granted',
+                'You have successfully earned +3 AI Creations!',
+                '🎉'
+              );
+            } else {
+              showCustomAlert(
+                'Ad Closed',
+                'You must finish watching the ad to earn the creations reward.',
+                '⚠️'
+              );
+            }
+          }
+        }
+      ]
+    );
+  }
+
   async function load() {
     setError(null);
+    loadCreations();
     try {
       const [feat, cats] = await Promise.all([api.featured(), api.categories()]);
       setFeatured(feat);
@@ -93,6 +173,28 @@ export default function HomeScreen() {
         </Pressable>
       </View>
 
+      {/* Rewarded Ad Card (Creations Booster) */}
+      {!isPremium && (
+        <View style={styles.adCardContainer}>
+          <LinearGradient
+            colors={['#1c103a', '#0c051a']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.adCard}
+          >
+            <View style={styles.adCardLeft}>
+              <Text style={styles.adCardTitle}>📺 Watch Ad for AI Creations</Text>
+              <Text style={styles.adCardSubtitle}>
+                Get +3 free AI creations instantly. Remaining: {remainingCreations}
+              </Text>
+            </View>
+            <Pressable style={styles.adCardBtn} onPress={handleWatchAdForCreations}>
+              <Text style={styles.adCardBtnText}>Watch (+3)</Text>
+            </Pressable>
+          </LinearGradient>
+        </View>
+      )}
+
       {/* Categories */}
       {categories.length > 0 && (
         <View style={styles.section}>
@@ -150,6 +252,14 @@ export default function HomeScreen() {
           </View>
         ))}
       </View>
+      <FancyAlert
+        visible={fancyAlert.visible}
+        title={fancyAlert.title}
+        message={fancyAlert.message}
+        icon={fancyAlert.icon}
+        buttons={fancyAlert.buttons}
+        onClose={() => setFancyAlert((prev) => ({ ...prev, visible: false }))}
+      />
     </ScrollView>
   );
 }
@@ -157,6 +267,50 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
   content: { paddingBottom: 40 },
+  adCardContainer: {
+    paddingHorizontal: Spacing.lg,
+    marginVertical: Spacing.md,
+  },
+  adCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: Spacing.lg,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(139,92,246,0.3)',
+  },
+  adCardLeft: {
+    flex: 1,
+    marginRight: Spacing.md,
+  },
+  adCardTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.white,
+    marginBottom: 4,
+  },
+  adCardSubtitle: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    lineHeight: 16,
+  },
+  adCardBtn: {
+    backgroundColor: Colors.accent,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 10,
+    borderRadius: Radius.full,
+    shadowColor: Colors.accent,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  adCardBtnText: {
+    color: Colors.white,
+    fontSize: 13,
+    fontWeight: '700',
+  },
   hero: {
     padding: Spacing.xl,
     paddingTop: 60,
