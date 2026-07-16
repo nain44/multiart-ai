@@ -235,20 +235,6 @@ export default function HomeScreen() {
         )}
       </View>
 
-      {/* Stats bar */}
-      <View style={styles.statsRow}>
-        {[
-          { value: '10K+', label: 'Wallpapers' },
-          { value: '20+', label: 'Categories' },
-          { value: '4K', label: 'Resolution' },
-          { value: '100%', label: 'Free' },
-        ].map((s) => (
-          <View key={s.label} style={styles.stat}>
-            <Text style={styles.statValue}>{s.value}</Text>
-            <Text style={styles.statLabel}>{s.label}</Text>
-          </View>
-        ))}
-      </View>
       <FancyAlert
         visible={fancyAlert.visible}
         title={fancyAlert.title}
