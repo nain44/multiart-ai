@@ -170,28 +170,6 @@ export default function HomeScreen() {
         </Pressable>
       </View>
 
-      {/* Rewarded Ad Card (Creations Booster) */}
-      {!isPremium && (
-        <View style={styles.adCardContainer}>
-          <LinearGradient
-            colors={['#1c103a', '#0c051a']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.adCard}
-          >
-            <View style={styles.adCardLeft}>
-              <Text style={styles.adCardTitle}>📺 Watch Ad for AI Creations</Text>
-              <Text style={styles.adCardSubtitle}>
-                Get +3 free AI creations instantly. Remaining: {remainingCreations}
-              </Text>
-            </View>
-            <Pressable style={styles.adCardBtn} onPress={handleWatchAdForCreations}>
-              <Text style={styles.adCardBtnText}>Watch (+3)</Text>
-            </Pressable>
-          </LinearGradient>
-        </View>
-      )}
-
       {/* Categories */}
       {categories.length > 0 && (
         <View style={styles.section}>
@@ -234,6 +212,28 @@ export default function HomeScreen() {
           <MasonryGrid wallpapers={featured} />
         )}
       </View>
+
+      {/* Rewarded Ad Card (Creations Booster) */}
+      {!isPremium && (
+        <View style={styles.adCardContainer}>
+          <LinearGradient
+            colors={['#1c103a', '#0c051a']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.adCard}
+          >
+            <View style={styles.adCardLeft}>
+              <Text style={styles.adCardTitle}>📺 Watch Ad for AI Creations</Text>
+              <Text style={styles.adCardSubtitle}>
+                Get +3 free AI creations instantly. Remaining: {remainingCreations}
+              </Text>
+            </View>
+            <Pressable style={styles.adCardBtn} onPress={handleWatchAdForCreations}>
+              <Text style={styles.adCardBtnText}>Watch (+3)</Text>
+            </Pressable>
+          </LinearGradient>
+        </View>
+      )}
 
       <FancyAlert
         visible={fancyAlert.visible}
