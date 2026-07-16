@@ -7,7 +7,7 @@ import { Platform } from 'react-native';
  * Expo Go on a physical device: uses your PC's LAN IP from hostUri (e.g. 192.168.0.103).
  * Update FALLBACK_LAN_IP if hostUri is unavailable (run `ipconfig` in PowerShell).
  */
-const FALLBACK_LAN_IP = '192.168.0.103';
+const FALLBACK_LAN_IP = '192.168.18.20';
 
 function getApiUrl(): string {
   // Use production URL in production builds
