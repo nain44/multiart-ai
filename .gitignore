@@ -1,0 +1,37 @@
+# Node modules
+node_modules/
+**/node_modules/
+
+# Expo / Mobile build outputs
+.expo/
+dist/
+web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Next.js build output
+.next/
+out/
+
+# Other build directories
+build/
+bin/
+obj/
+
+# Local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Zips & backups
+*.zip
+backend_deploy.zip
+
+# System files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,81 @@
+{
+  "expo": {
+    "name": "MultiArt AI",
+    "slug": "multiart-ai",
+    "version": "1.0.2",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#050508"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#050508"
+      },
+      "package": "com.paynovatechnologies.multiartai",
+      "versionCode": 3,
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.SET_WALLPAPER"
+      ],
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_AUDIO",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_VISUAL_USER_SELECTED"
+      ]
+    },
+    "plugins": [
+      "./plugins/withOptimizeR8",
+      "expo-router",
+      [
+        "expo-media-library",
+        {
+          "savePhotosPermission": "MultiArt AI needs access to save wallpapers to your gallery.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-4935488254463353~4815564161",
+          "iosAppId": "ca-app-pub-3940256099942544~1458002511"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableProguardInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "extraProguardRules": "-keep class com.swmansion.reanimated.** { *; }\n-keep class com.facebook.react.turbomodule.** { *; }\n-keep class com.google.android.gms.internal.consent_sdk.** { *; }\n-keep class dev.aliaref.RnExpoWallpapaerManager.** { *; }"
+          }
+        }
+      ]
+    ],
+    "scheme": "multiartai",
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ae22ac38-ccac-4fb7-868e-f23cc34a5da5"
+      },
+      "privacyPolicyUrl": "https://paynovatechnologies.com/privacy-policy"
+    },
+    "owner": "nain44"
+  },
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-4935488254463353~4815564161",
+    "ios_app_id": "ca-app-pub-3940256099942544~1458002511",
+    "androidAppId": "ca-app-pub-4935488254463353~4815564161",
+    "iosAppId": "ca-app-pub-3940256099942544~1458002511"
+  }
+}
