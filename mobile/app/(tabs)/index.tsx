@@ -155,9 +155,6 @@ export default function HomeScreen() {
       {/* Hero Header */}
       <View style={styles.hero}>
         <View style={styles.heroGlow} />
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>✨ Free · Premium Content · Daily Updates</Text>
-        </View>
         <Text style={styles.heroTitle}>
           {'Stunning\n'}
           <Text style={styles.heroAccent}>Wallpapers</Text>
