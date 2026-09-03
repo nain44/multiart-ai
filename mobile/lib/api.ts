@@ -1,4 +1,16 @@
 import { API_BASE_URL, PAGE_SIZE } from '@/constants/Config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const DEVICE_ID_KEY = 'device_id';
+
+async function getDeviceId(): Promise<string> {
+  let id = await AsyncStorage.getItem(DEVICE_ID_KEY);
+  if (!id) {
+    id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+    await AsyncStorage.setItem(DEVICE_ID_KEY, id);
+  }
+  return id;
+}
 
 export interface Wallpaper {
   _id: string;
@@ -53,8 +65,8 @@ export interface ExploreResponse {
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
     ...options,
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
   });
   if (!res.ok) {
     const error = await res.json().catch(() => ({}));
@@ -95,11 +107,14 @@ export const api = {
   category: (slug: string): Promise<Category> => apiFetch(`/categories/${slug}`),
 
   // ── AI Generation ──────────────────────────────────────────────────────────
-  generateAI: (prompt: string): Promise<Wallpaper> =>
-    apiFetch('/ai/generate', {
+  generateAI: async (prompt: string): Promise<Wallpaper> => {
+    const deviceId = await getDeviceId();
+    return apiFetch('/ai/generate', {
       method: 'POST',
+      headers: { 'x-device-id': deviceId },
       body: JSON.stringify({ prompt }),
-    }),
+    });
+  },
 
   // ── Reporting ──────────────────────────────────────────────────────────────
   reportWallpaper: (id: string): Promise<{ success: boolean }> =>

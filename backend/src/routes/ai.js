@@ -2,17 +2,45 @@ const express = require('express');
 const router = express.Router();
 const Wallpaper = require('../models/Wallpaper');
 const Category = require('../models/Category');
+const DeviceQuota = require('../models/DeviceQuota');
 const { uploadToCloudinary, generateThumbnail } = require('../services/cloudinary');
+const { validateAiPrompt } = require('../utils/contentFilter');
+
+// Anti-abuse safety net, not the product's free/premium quota (that's client-side).
+const MAX_GENERATIONS_PER_DEVICE_PER_DAY = 50;
 
 // POST /api/ai/generate
 router.post('/generate', async (req, res) => {
   const { prompt } = req.body;
+  const deviceId = req.header('x-device-id');
 
   if (!prompt || typeof prompt !== 'string' || prompt.trim() === '') {
     return res.status(400).json({ message: 'Prompt is required and must be a non-empty string' });
   }
 
+  if (!deviceId || typeof deviceId !== 'string') {
+    return res.status(400).json({ message: 'Missing device identifier' });
+  }
+
+  const promptCheck = validateAiPrompt(prompt);
+  if (!promptCheck.isValid) {
+    return res.status(400).json({ message: promptCheck.error });
+  }
+
   try {
+    const today = new Date().toISOString().slice(0, 10); // UTC YYYY-MM-DD
+    const quota = await DeviceQuota.findOneAndUpdate(
+      { deviceId, date: today },
+      { $setOnInsert: { deviceId, date: today, count: 0 } },
+      { upsert: true, new: true }
+    );
+
+    if (quota.count >= MAX_GENERATIONS_PER_DEVICE_PER_DAY) {
+      return res.status(429).json({
+        message: 'Daily AI generation limit reached for this device. Please try again tomorrow.',
+      });
+    }
+
     const cleanPrompt = prompt.trim();
     // Build Pollinations Flux image generation URL
     // Width 1080, height 1920 matches standard smartphone aspect ratio perfectly (9:16)
@@ -81,6 +109,10 @@ router.post('/generate', async (req, res) => {
     });
 
     const savedWallpaper = await wallpaper.save();
+
+    // Count only after a successful generation, so failed attempts don't burn quota
+    quota.count += 1;
+    await quota.save();
 
     // Increment category wallpaper count
     category.wallpaperCount = (category.wallpaperCount || 0) + 1;
