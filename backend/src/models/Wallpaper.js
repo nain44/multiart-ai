@@ -22,6 +22,11 @@ const wallpaperSchema = new mongoose.Schema(
     cloudinaryId: { type: String }, // public_id from Cloudinary
     isPremium: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
+    // Ownership + moderation for user-generated (AI) content.
+    // Defaults keep existing/admin-uploaded wallpapers publicly visible without a migration.
+    deviceId: { type: String, index: true },
+    visibility: { type: String, enum: ['private', 'public'], default: 'public' },
+    approvalStatus: { type: String, enum: ['approved', 'pending', 'rejected'], default: 'approved' },
     // Source attribution (for Pexels/Unsplash imported images)
     source: {
       type: String,
@@ -45,6 +50,7 @@ const wallpaperSchema = new mongoose.Schema(
 wallpaperSchema.index({ category: 1, isActive: 1 });
 wallpaperSchema.index({ tags: 1 });
 wallpaperSchema.index({ isPremium: 1, isActive: 1 });
+wallpaperSchema.index({ visibility: 1, approvalStatus: 1, isActive: 1 });
 wallpaperSchema.index({ downloadCount: -1 });
 wallpaperSchema.index({ createdAt: -1 });
 wallpaperSchema.index({ title: 'text', tags: 'text' }); // full-text search

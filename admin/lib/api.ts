@@ -57,6 +57,15 @@ export const wallpaperApi = {
 
   delete: (id: string) =>
     request(`/wallpapers/${id}`, { method: 'DELETE' }),
+
+  aiQueue: (status: 'pending' | 'approved' | 'rejected' = 'pending') =>
+    request(`/wallpapers/admin/ai-queue?status=${status}`),
+
+  approve: (id: string) =>
+    request(`/wallpapers/${id}/approve`, { method: 'POST' }),
+
+  reject: (id: string) =>
+    request(`/wallpapers/${id}/reject`, { method: 'POST' }),
 };
 
 // ── Categories ────────────────────────────────────────────────────────────────

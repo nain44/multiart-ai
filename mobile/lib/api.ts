@@ -32,6 +32,8 @@ export interface Wallpaper {
   photographerUrl?: string;
   source: string;
   createdAt: string;
+  visibility?: 'private' | 'public';
+  approvalStatus?: 'approved' | 'pending' | 'rejected';
 }
 
 export interface Category {
@@ -86,7 +88,10 @@ export const api = {
 
   random: (): Promise<Wallpaper> => apiFetch('/wallpapers/random'),
 
-  wallpaper: (id: string): Promise<Wallpaper> => apiFetch(`/wallpapers/${id}`),
+  wallpaper: async (id: string): Promise<Wallpaper> => {
+    const deviceId = await getDeviceId();
+    return apiFetch(`/wallpapers/${id}`, { headers: { 'x-device-id': deviceId } });
+  },
 
   search: (q: string, page = 1): Promise<PaginatedResponse> =>
     apiFetch(`/wallpapers?search=${encodeURIComponent(q)}&page=${page}&limit=${PAGE_SIZE}`),
@@ -107,13 +112,28 @@ export const api = {
   category: (slug: string): Promise<Category> => apiFetch(`/categories/${slug}`),
 
   // ── AI Generation ──────────────────────────────────────────────────────────
-  generateAI: async (prompt: string): Promise<Wallpaper> => {
+  generateAI: async (prompt: string, visibility: 'private' | 'public' = 'private'): Promise<Wallpaper> => {
     const deviceId = await getDeviceId();
     return apiFetch('/ai/generate', {
       method: 'POST',
       headers: { 'x-device-id': deviceId },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ prompt, visibility }),
     });
+  },
+
+  myCreations: async (): Promise<Wallpaper[]> => {
+    const deviceId = await getDeviceId();
+    return apiFetch('/ai/mine', { headers: { 'x-device-id': deviceId } });
+  },
+
+  requestPublic: async (id: string): Promise<Wallpaper> => {
+    const deviceId = await getDeviceId();
+    return apiFetch(`/ai/${id}/request-public`, { method: 'POST', headers: { 'x-device-id': deviceId } });
+  },
+
+  makePrivate: async (id: string): Promise<Wallpaper> => {
+    const deviceId = await getDeviceId();
+    return apiFetch(`/ai/${id}/make-private`, { method: 'POST', headers: { 'x-device-id': deviceId } });
   },
 
   // ── Reporting ──────────────────────────────────────────────────────────────

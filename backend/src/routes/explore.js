@@ -100,6 +100,8 @@ router.get('/', async (req, res) => {
     const searchRegex = new RegExp(q.split(/\s+/).join('|'), 'i');
     dbWallpapers = await Wallpaper.find({
       isActive: true,
+      visibility: 'public',
+      approvalStatus: 'approved',
       $or: [
         { title: { $regex: searchRegex } },
         { tags: { $regex: searchRegex } },

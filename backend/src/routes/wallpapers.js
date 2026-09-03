@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
   const { page = 1, limit = 20, category, isPremium, search, sort = 'createdAt' } = req.query;
   const skip = (Number(page) - 1) * Number(limit);
 
-  const query = { isActive: true };
+  const query = { isActive: true, visibility: 'public', approvalStatus: 'approved' };
   if (category) query.category = category;
   if (isPremium !== undefined) query.isPremium = isPremium === 'true';
   if (search) {
@@ -57,7 +57,7 @@ router.get('/', async (req, res) => {
  * Top 12 wallpapers by download count (for hero/featured section)
  */
 router.get('/featured', async (req, res) => {
-  const wallpapers = await Wallpaper.find({ isActive: true })
+  const wallpapers = await Wallpaper.find({ isActive: true, visibility: 'public', approvalStatus: 'approved' })
     .populate('category', 'name slug')
     .sort({ downloadCount: -1 })
     .limit(12)
@@ -70,9 +70,10 @@ router.get('/featured', async (req, res) => {
  * Returns 1 random wallpaper (for daily wallpaper feature)
  */
 router.get('/random', async (req, res) => {
-  const count = await Wallpaper.countDocuments({ isActive: true, isPremium: false });
+  const randomQuery = { isActive: true, isPremium: false, visibility: 'public', approvalStatus: 'approved' };
+  const count = await Wallpaper.countDocuments(randomQuery);
   const random = Math.floor(Math.random() * count);
-  const wallpaper = await Wallpaper.findOne({ isActive: true, isPremium: false })
+  const wallpaper = await Wallpaper.findOne(randomQuery)
     .skip(random)
     .populate('category', 'name slug');
   res.json(wallpaper);
@@ -99,6 +100,52 @@ router.get('/admin/stats', authMiddleware, async (req, res) => {
 });
 
 /**
+ * GET /api/wallpapers/admin/ai-queue?status=pending
+ * Lists user-submitted AI wallpapers awaiting (or already reviewed for) public listing.
+ */
+router.get('/admin/ai-queue', authMiddleware, async (req, res) => {
+  const { status = 'pending' } = req.query;
+  const wallpapers = await Wallpaper.find({ visibility: 'public', approvalStatus: status })
+    .populate('category', 'name slug icon')
+    .sort({ createdAt: -1 });
+  res.json(wallpapers);
+});
+
+/**
+ * POST /api/wallpapers/:id/approve
+ * Approves a pending public AI wallpaper, making it visible in public listings.
+ */
+router.post('/:id/approve', authMiddleware, async (req, res) => {
+  const wallpaper = await Wallpaper.findById(req.params.id);
+  if (!wallpaper) return res.status(404).json({ message: 'Wallpaper not found' });
+
+  const wasAlreadyApproved = wallpaper.visibility === 'public' && wallpaper.approvalStatus === 'approved';
+  wallpaper.visibility = 'public';
+  wallpaper.approvalStatus = 'approved';
+  await wallpaper.save();
+
+  if (!wasAlreadyApproved) {
+    await Category.findByIdAndUpdate(wallpaper.category, { $inc: { wallpaperCount: 1 } });
+  }
+
+  res.json(wallpaper);
+});
+
+/**
+ * POST /api/wallpapers/:id/reject
+ * Rejects a pending public AI wallpaper; stays hidden from everyone but the owner.
+ */
+router.post('/:id/reject', authMiddleware, async (req, res) => {
+  const wallpaper = await Wallpaper.findById(req.params.id);
+  if (!wallpaper) return res.status(404).json({ message: 'Wallpaper not found' });
+
+  wallpaper.approvalStatus = 'rejected';
+  await wallpaper.save();
+
+  res.json(wallpaper);
+});
+
+/**
  * GET /api/wallpapers/:id
  * Single wallpaper detail
  */
@@ -109,6 +156,15 @@ router.get('/:id', async (req, res) => {
   if (!wallpaper || !wallpaper.isActive) {
     return res.status(404).json({ message: 'Wallpaper not found' });
   }
+
+  const isPublicApproved = wallpaper.visibility === 'public' && wallpaper.approvalStatus === 'approved';
+  if (!isPublicApproved) {
+    const deviceId = req.header('x-device-id');
+    if (!deviceId || wallpaper.deviceId !== deviceId) {
+      return res.status(404).json({ message: 'Wallpaper not found' });
+    }
+  }
+
   res.json(wallpaper);
 });
 

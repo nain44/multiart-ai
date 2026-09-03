@@ -11,12 +11,19 @@ const MAX_GENERATIONS_PER_DEVICE_PER_DAY = 50;
 
 // POST /api/ai/generate
 router.post('/generate', async (req, res) => {
-  const { prompt } = req.body;
+  const { prompt, visibility } = req.body;
   const deviceId = req.header('x-device-id');
 
   if (!prompt || typeof prompt !== 'string' || prompt.trim() === '') {
     return res.status(400).json({ message: 'Prompt is required and must be a non-empty string' });
   }
+
+  if (visibility !== undefined && visibility !== 'private' && visibility !== 'public') {
+    return res.status(400).json({ message: 'visibility must be "private" or "public"' });
+  }
+  // Private by default; a device-less (old app) client can only create private wallpapers,
+  // since there'd be no way to attribute ownership for a later public request/review.
+  const requestedVisibility = deviceId && visibility === 'public' ? 'public' : 'private';
 
   const promptCheck = validateAiPrompt(prompt);
   if (!promptCheck.isValid) {
@@ -108,6 +115,9 @@ router.post('/generate', async (req, res) => {
       source: 'own',
       photographer: 'AI Generator',
       photographerUrl: '',
+      deviceId: deviceId || undefined,
+      visibility: requestedVisibility,
+      approvalStatus: requestedVisibility === 'public' ? 'pending' : 'approved',
     });
 
     const savedWallpaper = await wallpaper.save();
@@ -118,9 +128,7 @@ router.post('/generate', async (req, res) => {
       await quota.save();
     }
 
-    // Increment category wallpaper count
-    category.wallpaperCount = (category.wallpaperCount || 0) + 1;
-    await category.save();
+    // Category counts only reflect publicly-browsable wallpapers; incremented on admin approval instead.
 
     // Populate category details and return
     const populatedWallpaper = await Wallpaper.findById(savedWallpaper._id).populate('category');
@@ -133,6 +141,71 @@ router.post('/generate', async (req, res) => {
       error: error.message,
     });
   }
+});
+
+/**
+ * GET /api/ai/mine
+ * Returns all AI creations owned by this device, regardless of status.
+ */
+router.get('/mine', async (req, res) => {
+  const deviceId = req.header('x-device-id');
+  if (!deviceId) {
+    return res.status(400).json({ message: 'Missing device identifier' });
+  }
+
+  const wallpapers = await Wallpaper.find({ deviceId })
+    .populate('category', 'name slug icon')
+    .sort({ createdAt: -1 });
+
+  res.json(wallpapers);
+});
+
+/**
+ * POST /api/ai/:id/request-public
+ * Owner asks for their private creation to be reviewed for public listing.
+ */
+router.post('/:id/request-public', async (req, res) => {
+  const deviceId = req.header('x-device-id');
+  if (!deviceId) {
+    return res.status(400).json({ message: 'Missing device identifier' });
+  }
+
+  const wallpaper = await Wallpaper.findOne({ _id: req.params.id, deviceId });
+  if (!wallpaper) {
+    return res.status(404).json({ message: 'Wallpaper not found' });
+  }
+
+  wallpaper.visibility = 'public';
+  wallpaper.approvalStatus = 'pending';
+  await wallpaper.save();
+
+  res.json(wallpaper);
+});
+
+/**
+ * POST /api/ai/:id/make-private
+ * Owner pulls a creation back to private (e.g. undo a public request, or hide an approved one).
+ */
+router.post('/:id/make-private', async (req, res) => {
+  const deviceId = req.header('x-device-id');
+  if (!deviceId) {
+    return res.status(400).json({ message: 'Missing device identifier' });
+  }
+
+  const wallpaper = await Wallpaper.findOne({ _id: req.params.id, deviceId });
+  if (!wallpaper) {
+    return res.status(404).json({ message: 'Wallpaper not found' });
+  }
+
+  const wasPublicApproved = wallpaper.visibility === 'public' && wallpaper.approvalStatus === 'approved';
+  wallpaper.visibility = 'private';
+  await wallpaper.save();
+
+  if (wasPublicApproved) {
+    await Category.findByIdAndUpdate(wallpaper.category, { $inc: { wallpaperCount: -1 } });
+  }
+
+  res.json(wallpaper);
 });
 
 module.exports = router;

@@ -11,6 +11,7 @@ import {
   Keyboard,
   Dimensions,
   SafeAreaView,
+  Switch,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
@@ -98,6 +99,7 @@ export default function AIGeneratorScreen() {
   };
   const [loadingQuoteIndex, setLoadingQuoteIndex] = useState(0);
   const [generatedWp, setGeneratedWp] = useState<Wallpaper | null>(null);
+  const [makePublic, setMakePublic] = useState(false);
 
   // Cycle loading quotes when generating is true
   useEffect(() => {
@@ -148,7 +150,7 @@ export default function AIGeneratorScreen() {
     setGeneratedWp(null);
 
     try {
-      const wallpaper = await api.generateAI(prompt);
+      const wallpaper = await api.generateAI(prompt, makePublic ? 'public' : 'private');
       setGeneratedWp(wallpaper);
 
       if (!isPremium) {
@@ -200,6 +202,9 @@ export default function AIGeneratorScreen() {
             </View>
           )}
         </View>
+        <Pressable style={styles.myCreationsLink} onPress={() => router.push('/my-creations' as any)}>
+          <Text style={styles.myCreationsLinkText}>🗂️ My Creations</Text>
+        </Pressable>
       </View>
 
       <ScrollView 
@@ -233,6 +238,14 @@ export default function AIGeneratorScreen() {
             </View>
 
             <Text style={styles.resultPromptTitle}>"{generatedWp.title}"</Text>
+
+            <View style={styles.statusPill}>
+              <Text style={styles.statusPillText}>
+                {generatedWp.visibility === 'public'
+                  ? (generatedWp.approvalStatus === 'approved' ? '🌍 Public' : '⏳ Submitted for review')
+                  : '🔒 Private — only you can see this'}
+              </Text>
+            </View>
 
             <View style={styles.resultsActions}>
               <Pressable style={styles.viewDetailsBtn} onPress={handleViewDetails}>
@@ -293,6 +306,23 @@ export default function AIGeneratorScreen() {
               ))}
             </ScrollView>
 
+            <View style={styles.visibilityRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.visibilityTitle}>{makePublic ? 'Submit for public gallery' : 'Keep private'}</Text>
+                <Text style={styles.visibilitySubtitle}>
+                  {makePublic
+                    ? 'Visible to everyone once approved by our team'
+                    : 'Only you can see this creation'}
+                </Text>
+              </View>
+              <Switch
+                value={makePublic}
+                onValueChange={setMakePublic}
+                trackColor={{ false: Colors.surface2, true: Colors.accent }}
+                thumbColor={Colors.white}
+              />
+            </View>
+
             <Pressable style={styles.generateBtn} onPress={handleGenerate}>
               <LinearGradient
                 colors={[Colors.accent, Colors.accent2]}
@@ -333,6 +363,51 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: Colors.text,
     letterSpacing: 0.5,
+  },
+  myCreationsLink: {
+    alignSelf: 'flex-start',
+    marginTop: Spacing.sm,
+  },
+  myCreationsLinkText: {
+    color: Colors.accent,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  visibilityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    marginBottom: Spacing.lg,
+    gap: Spacing.md,
+  },
+  visibilityTitle: {
+    color: Colors.text,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  visibilitySubtitle: {
+    color: Colors.textMuted,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  statusPill: {
+    alignSelf: 'center',
+    backgroundColor: Colors.surface2,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.full,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
+    marginBottom: Spacing.xl,
+  },
+  statusPillText: {
+    color: Colors.textMuted,
+    fontSize: 12,
+    fontWeight: '600',
   },
   headerSubtitle: {
     fontSize: 13,

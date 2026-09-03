@@ -7,6 +7,7 @@ const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: '📊' },
   { href: '/dashboard/upload', label: 'Upload', icon: '⬆️' },
   { href: '/dashboard/wallpapers', label: 'Wallpapers', icon: '🖼️' },
+  { href: '/dashboard/ai-queue', label: 'AI Review Queue', icon: '🤖' },
   { href: '/dashboard/categories', label: 'Categories', icon: '📁' },
 ];
 
