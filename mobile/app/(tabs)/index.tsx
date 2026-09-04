@@ -9,7 +9,6 @@ import { router } from 'expo-router';
 import { api, Wallpaper, Category } from '@/lib/api';
 import { Colors, Spacing, Radius } from '@/constants/Colors';
 import MasonryGrid from '@/components/MasonryGrid';
-import WallpaperCard from '@/components/WallpaperCard';
 import CategoryChip from '@/components/CategoryChip';
 import SkeletonGrid from '@/components/SkeletonCard';
 import BannerAdComponent from '@/components/BannerAdComponent';
@@ -22,7 +21,6 @@ const { width } = Dimensions.get('window');
 
 export default function HomeScreen() {
   const [featured, setFeatured] = useState<Wallpaper[]>([]);
-  const [topOfDay, setTopOfDay] = useState<Wallpaper[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -106,14 +104,9 @@ export default function HomeScreen() {
     setError(null);
     loadCreations();
     try {
-      const [feat, cats, topDay] = await Promise.all([
-        api.featured(),
-        api.categories(),
-        api.communityTop('daily').catch(() => []),
-      ]);
+      const [feat, cats] = await Promise.all([api.featured(), api.categories()]);
       setFeatured(feat);
       setCategories(cats.filter((c) => c.isActive));
-      setTopOfDay(topDay.slice(0, 3));
     } catch (e: any) {
       console.error(e);
       setError(e?.message || 'Could not connect to server. Check your LAN IP in Config.ts.');
@@ -195,27 +188,6 @@ export default function HomeScreen() {
         </View>
       )}
 
-
-      {/* Top of the Day (community AI creations) */}
-      {topOfDay.length > 0 && (
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>🏆 Top of the Day</Text>
-            <Pressable onPress={() => router.push('/community' as any)}>
-              <Text style={styles.seeAll}>See all</Text>
-            </Pressable>
-          </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.topOfDayRow}
-          >
-            {topOfDay.map((wp, i) => (
-              <WallpaperCard key={wp._id} wallpaper={wp} rank={i + 1} />
-            ))}
-          </ScrollView>
-        </View>
-      )}
 
       {/* Featured Wallpapers */}
       <View style={styles.section}>
@@ -381,10 +353,6 @@ const styles = StyleSheet.create({
   },
   section: {
     marginTop: Spacing.xxl,
-  },
-  topOfDayRow: {
-    paddingHorizontal: Spacing.lg,
-    gap: Spacing.md,
   },
   sectionHeader: {
     flexDirection: 'row',

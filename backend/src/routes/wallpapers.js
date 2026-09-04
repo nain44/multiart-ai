@@ -86,32 +86,6 @@ router.get('/featured', async (req, res) => {
 });
 
 /**
- * GET /api/wallpapers/community-top?period=daily|weekly
- * Ranks user-submitted AI creations (not admin's own catalog) approved and
- * created within the given window, by download count. Gives community
- * creations a dedicated discovery surface instead of being buried in the
- * general catalog alongside thousands of stock photos.
- */
-router.get('/community-top', async (req, res) => {
-  const { period = 'daily' } = req.query;
-  const windowMs = period === 'weekly' ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
-
-  const wallpapers = await Wallpaper.find({
-    isActive: true,
-    visibility: 'public',
-    approvalStatus: 'approved',
-    deviceId: { $exists: true, $ne: null },
-    createdAt: { $gte: new Date(Date.now() - windowMs) },
-  })
-    .populate('category', 'name slug')
-    .sort({ downloadCount: -1 })
-    .limit(30)
-    .select('-cloudinaryId');
-
-  res.json(wallpapers);
-});
-
-/**
  * GET /api/wallpapers/random
  * Returns 1 random wallpaper (for daily wallpaper feature)
  */
