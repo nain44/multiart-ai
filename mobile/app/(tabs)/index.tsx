@@ -1,14 +1,15 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, Pressable,
   Dimensions, RefreshControl,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { api, Wallpaper, Category } from '@/lib/api';
 import { Colors, Spacing, Radius } from '@/constants/Colors';
 import MasonryGrid from '@/components/MasonryGrid';
+import WallpaperCard from '@/components/WallpaperCard';
 import CategoryChip from '@/components/CategoryChip';
 import SkeletonGrid from '@/components/SkeletonCard';
 import BannerAdComponent from '@/components/BannerAdComponent';
@@ -21,6 +22,7 @@ const { width } = Dimensions.get('window');
 
 export default function HomeScreen() {
   const [featured, setFeatured] = useState<Wallpaper[]>([]);
+  const [myCreations, setMyCreations] = useState<Wallpaper[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -118,6 +120,16 @@ export default function HomeScreen() {
 
   useEffect(() => { load(); }, []);
 
+  // Refresh just "Your Creations" on focus, so a wallpaper generated on the
+  // Create tab shows up at the top the moment the user comes back to Home.
+  useFocusEffect(
+    useCallback(() => {
+      api.myCreations()
+        .then((items) => setMyCreations(items.slice(0, 6)))
+        .catch(() => {});
+    }, [])
+  );
+
   if (error) {
     return (
       <View style={{ flex: 1, backgroundColor: Colors.bg, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
@@ -188,6 +200,27 @@ export default function HomeScreen() {
         </View>
       )}
 
+
+      {/* Your Creations (own AI generations, private or pending - visible only to this device) */}
+      {myCreations.length > 0 && (
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>🎨 Your Creations</Text>
+            <Pressable onPress={() => router.push('/my-creations' as any)}>
+              <Text style={styles.seeAll}>See all</Text>
+            </Pressable>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalRow}
+          >
+            {myCreations.map((wp) => (
+              <WallpaperCard key={wp._id} wallpaper={wp} />
+            ))}
+          </ScrollView>
+        </View>
+      )}
 
       {/* Featured Wallpapers */}
       <View style={styles.section}>
@@ -353,6 +386,10 @@ const styles = StyleSheet.create({
   },
   section: {
     marginTop: Spacing.xxl,
+  },
+  horizontalRow: {
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.md,
   },
   sectionHeader: {
     flexDirection: 'row',

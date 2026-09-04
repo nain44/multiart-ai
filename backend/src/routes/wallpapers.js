@@ -125,7 +125,14 @@ router.get('/admin/stats', authMiddleware, async (req, res) => {
  */
 router.get('/admin/ai-queue', authMiddleware, async (req, res) => {
   const { status = 'pending' } = req.query;
-  const wallpapers = await Wallpaper.find({ visibility: 'public', approvalStatus: status })
+  // deviceId marks a wallpaper as user-submitted (see ai.js /generate); without
+  // this filter, any public wallpaper matching the status shows here too -
+  // including bulk catalog imports (Unsplash/Pexels) that were never AI-submitted.
+  const wallpapers = await Wallpaper.find({
+    visibility: 'public',
+    approvalStatus: status,
+    deviceId: { $exists: true, $ne: null },
+  })
     .populate('category', 'name slug icon')
     .sort({ createdAt: -1 });
   res.json(wallpapers);
