@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const MONGO_URI = process.env.MONGODB_URI;
-const NEW_EMAIL = 'admin@MultiArt AI.com';
+const NEW_EMAIL = 'admin@multiartai.com';
 const NEW_PASSWORD = 'Admin@1234';
 const NEW_NAME = 'Admin';
 
