@@ -43,6 +43,15 @@ app.get('/api/health', (req, res) => {
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   console.error('[Error]', err.message);
+
+  // Mongo duplicate key error (e.g. Wallpaper.dedupeKey unique index) - this is
+  // the duplicate-insert safety net rejecting an image that already exists.
+  if (err.code === 11000) {
+    return res.status(409).json({
+      message: 'This image already exists in the collection.',
+    });
+  }
+
   res.status(err.status || 500).json({
     message: err.message || 'Internal server error',
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),

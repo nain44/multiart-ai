@@ -256,7 +256,14 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
     dominantColor: dominantColor || '#1a1a2e',
   });
 
-  await wallpaper.save();
+  try {
+    await wallpaper.save();
+  } catch (err) {
+    if (err.code === 11000) {
+      await deleteFromCloudinary(result.public_id);
+    }
+    throw err;
+  }
   await Category.findByIdAndUpdate(category, { $inc: { wallpaperCount: 1 } });
 
   res.status(201).json(wallpaper);

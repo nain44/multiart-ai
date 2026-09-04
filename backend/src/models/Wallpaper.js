@@ -27,6 +27,11 @@ const wallpaperSchema = new mongoose.Schema(
     // are filled first, remaining slots fall back to downloadCount ranking.
     isFeatured: { type: Boolean, default: false },
     featuredAt: { type: Date },
+    // De-dup safety net: normalized "source|baseImageUrl" key, computed on save.
+    // Unique+sparse index rejects duplicate inserts at the DB level regardless of
+    // which code path creates the wallpaper (manual upload, AI generation, or any
+    // external automation writing to this collection) - see normalizeImageUrl below.
+    dedupeKey: { type: String, unique: true, sparse: true },
     // Ownership + moderation for user-generated (AI) content.
     // Defaults keep existing/admin-uploaded wallpapers publicly visible without a migration.
     deviceId: { type: String, index: true },
@@ -60,5 +65,22 @@ wallpaperSchema.index({ downloadCount: -1 });
 wallpaperSchema.index({ isFeatured: 1, featuredAt: -1 });
 wallpaperSchema.index({ createdAt: -1 });
 wallpaperSchema.index({ title: 'text', tags: 'text' }); // full-text search
+
+// Strips dynamic query params (width/height/seed/fit/crop/nologo) so the same
+// underlying image requested at different sizes still maps to one dedup key.
+function normalizeImageUrl(url) {
+  if (!url) return '';
+  return url.trim().toLowerCase().replace(/[?&](width|height|seed|fit|crop|nologo)=[^&]*/gi, '');
+}
+
+wallpaperSchema.pre('save', function (next) {
+  if (this.isModified('imageUrl') || this.isModified('source') || !this.dedupeKey) {
+    const base = normalizeImageUrl(this.imageUrl);
+    this.dedupeKey = base ? `${this.source}|${base}` : undefined;
+  }
+  next();
+});
+
+wallpaperSchema.statics.normalizeImageUrl = normalizeImageUrl;
 
 module.exports = mongoose.model('Wallpaper', wallpaperSchema);

@@ -3,7 +3,7 @@ const router = express.Router();
 const Wallpaper = require('../models/Wallpaper');
 const Category = require('../models/Category');
 const DeviceQuota = require('../models/DeviceQuota');
-const { uploadToCloudinary, generateThumbnail } = require('../services/cloudinary');
+const { uploadToCloudinary, generateThumbnail, deleteFromCloudinary } = require('../services/cloudinary');
 const { validateAiPrompt } = require('../utils/contentFilter');
 
 // Anti-abuse safety net, not the product's free/premium quota (that's client-side).
@@ -120,7 +120,15 @@ router.post('/generate', async (req, res) => {
       approvalStatus: requestedVisibility === 'public' ? 'pending' : 'approved',
     });
 
-    const savedWallpaper = await wallpaper.save();
+    let savedWallpaper;
+    try {
+      savedWallpaper = await wallpaper.save();
+    } catch (err) {
+      if (err.code === 11000) {
+        await deleteFromCloudinary(cloudinaryResult.public_id);
+      }
+      throw err;
+    }
 
     // Count only after a successful generation, so failed attempts don't burn quota
     if (quota) {
