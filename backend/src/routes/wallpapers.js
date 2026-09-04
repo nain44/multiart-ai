@@ -17,9 +17,11 @@ router.get('/', async (req, res) => {
   const { page = 1, limit = 20, category, isPremium, search, sort = 'createdAt' } = req.query;
   const skip = (Number(page) - 1) * Number(limit);
 
+  const { isFeatured } = req.query;
   const query = { isActive: true, visibility: 'public', approvalStatus: 'approved' };
   if (category) query.category = category;
   if (isPremium !== undefined) query.isPremium = isPremium === 'true';
+  if (isFeatured !== undefined) query.isFeatured = isFeatured === 'true';
   if (search) {
     query.$text = { $search: search };
   }
@@ -54,14 +56,58 @@ router.get('/', async (req, res) => {
 
 /**
  * GET /api/wallpapers/featured
- * Top 12 wallpapers by download count (for hero/featured section)
+ * Admin-picked wallpapers (isFeatured, most recently pinned first) fill the
+ * hero/featured section first; any remaining slots (up to 12) are filled by
+ * download count, same as before curation existed.
  */
 router.get('/featured', async (req, res) => {
-  const wallpapers = await Wallpaper.find({ isActive: true, visibility: 'public', approvalStatus: 'approved' })
+  const baseQuery = { isActive: true, visibility: 'public', approvalStatus: 'approved' };
+
+  const pinned = await Wallpaper.find({ ...baseQuery, isFeatured: true })
     .populate('category', 'name slug')
-    .sort({ downloadCount: -1 })
+    .sort({ featuredAt: -1 })
     .limit(12)
     .select('-cloudinaryId');
+
+  if (pinned.length >= 12) {
+    return res.json(pinned);
+  }
+
+  const fillers = await Wallpaper.find({
+    ...baseQuery,
+    _id: { $nin: pinned.map((w) => w._id) },
+  })
+    .populate('category', 'name slug')
+    .sort({ downloadCount: -1 })
+    .limit(12 - pinned.length)
+    .select('-cloudinaryId');
+
+  res.json([...pinned, ...fillers]);
+});
+
+/**
+ * GET /api/wallpapers/community-top?period=daily|weekly
+ * Ranks user-submitted AI creations (not admin's own catalog) approved and
+ * created within the given window, by download count. Gives community
+ * creations a dedicated discovery surface instead of being buried in the
+ * general catalog alongside thousands of stock photos.
+ */
+router.get('/community-top', async (req, res) => {
+  const { period = 'daily' } = req.query;
+  const windowMs = period === 'weekly' ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+
+  const wallpapers = await Wallpaper.find({
+    isActive: true,
+    visibility: 'public',
+    approvalStatus: 'approved',
+    deviceId: { $exists: true, $ne: null },
+    createdAt: { $gte: new Date(Date.now() - windowMs) },
+  })
+    .populate('category', 'name slug')
+    .sort({ downloadCount: -1 })
+    .limit(30)
+    .select('-cloudinaryId');
+
   res.json(wallpapers);
 });
 

@@ -25,6 +25,7 @@ export default function AiQueuePage() {
   const [items, setItems] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [clearing, setClearing] = useState(false);
   const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   async function load(status: QueueItem['approvalStatus']) {
@@ -54,11 +55,49 @@ export default function AiQueuePage() {
     }
   }
 
+  async function handleDelete(id: string) {
+    if (!confirm('Permanently delete this wallpaper and its image? This cannot be undone.')) return;
+    setBusyId(id);
+    try {
+      await wallpaperApi.delete(id);
+      setMsg({ type: 'success', text: 'Wallpaper permanently deleted.' });
+      load(tab);
+    } catch (err: any) {
+      setMsg({ type: 'error', text: err.message });
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function handleClearRejected() {
+    if (items.length === 0) return;
+    if (!confirm(`Permanently delete all ${items.length} rejected wallpaper(s)? This cannot be undone.`)) return;
+    setClearing(true);
+    let failed = 0;
+    for (const item of items) {
+      try {
+        await wallpaperApi.delete(item._id);
+      } catch {
+        failed++;
+      }
+    }
+    setClearing(false);
+    setMsg(
+      failed === 0
+        ? { type: 'success', text: 'All rejected wallpapers permanently deleted.' }
+        : { type: 'error', text: `Deleted ${items.length - failed} of ${items.length}; ${failed} failed.` }
+    );
+    load(tab);
+  }
+
   async function handleReject(id: string) {
     setBusyId(id);
     try {
       await wallpaperApi.reject(id);
-      setMsg({ type: 'success', text: 'Wallpaper rejected.' });
+      setMsg({
+        type: 'success',
+        text: tab === 'approved' ? 'Approval revoked; wallpaper is no longer public.' : 'Wallpaper rejected.',
+      });
       load(tab);
     } catch (err: any) {
       setMsg({ type: 'error', text: err.message });
@@ -78,7 +117,7 @@ export default function AiQueuePage() {
 
       {msg && <div className={`alert alert-${msg.type}`} onClick={() => setMsg(null)}>{msg.text}</div>}
 
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
         {TABS.map((t) => (
           <button
             key={t.key}
@@ -88,6 +127,16 @@ export default function AiQueuePage() {
             {t.label}
           </button>
         ))}
+        {tab === 'rejected' && items.length > 0 && (
+          <button
+            className="btn btn-danger btn-sm"
+            style={{ marginLeft: 'auto' }}
+            disabled={clearing}
+            onClick={handleClearRejected}
+          >
+            {clearing ? 'Clearing…' : `🗑️ Clear all (${items.length})`}
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -128,13 +177,33 @@ export default function AiQueuePage() {
                 </div>
               )}
               {tab === 'rejected' && (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    className="btn btn-primary btn-sm"
+                    style={{ flex: 1 }}
+                    disabled={busyId === item._id || clearing}
+                    onClick={() => handleApprove(item._id)}
+                  >
+                    ✅ Approve anyway
+                  </button>
+                  <button
+                    className="btn btn-danger btn-sm"
+                    style={{ flex: 1 }}
+                    disabled={busyId === item._id || clearing}
+                    onClick={() => handleDelete(item._id)}
+                  >
+                    🗑️ Delete
+                  </button>
+                </div>
+              )}
+              {tab === 'approved' && (
                 <button
-                  className="btn btn-primary btn-sm"
+                  className="btn btn-danger btn-sm"
                   style={{ width: '100%' }}
                   disabled={busyId === item._id}
-                  onClick={() => handleApprove(item._id)}
+                  onClick={() => handleReject(item._id)}
                 >
-                  ✅ Approve anyway
+                  ↩️ Revoke approval
                 </button>
               )}
             </div>

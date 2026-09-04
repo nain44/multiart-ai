@@ -9,37 +9,38 @@ const GAP = 12;
 
 interface Props {
   wallpapers: Wallpaper[];
+  showRank?: boolean;
 }
 
-export default function MasonryGrid({ wallpapers }: Props) {
-  const first6 = wallpapers.slice(0, 6);
-  const remaining = wallpapers.slice(6);
+export default function MasonryGrid({ wallpapers, showRank = false }: Props) {
+  const first6 = wallpapers.slice(0, 6).map((wp, i) => ({ wp, rank: i + 1 }));
+  const remaining = wallpapers.slice(6).map((wp, i) => ({ wp, rank: i + 7 }));
 
-  const left1: Wallpaper[] = [];
-  const right1: Wallpaper[] = [];
-  first6.forEach((wp, i) => {
-    if (i % 2 === 0) left1.push(wp);
-    else right1.push(wp);
+  const left1: { wp: Wallpaper; rank: number }[] = [];
+  const right1: { wp: Wallpaper; rank: number }[] = [];
+  first6.forEach((entry, i) => {
+    if (i % 2 === 0) left1.push(entry);
+    else right1.push(entry);
   });
 
-  const left2: Wallpaper[] = [];
-  const right2: Wallpaper[] = [];
-  remaining.forEach((wp, i) => {
-    if (i % 2 === 0) left2.push(wp);
-    else right2.push(wp);
+  const left2: { wp: Wallpaper; rank: number }[] = [];
+  const right2: { wp: Wallpaper; rank: number }[] = [];
+  remaining.forEach((entry, i) => {
+    if (i % 2 === 0) left2.push(entry);
+    else right2.push(entry);
   });
 
   return (
     <View>
       <View style={styles.row}>
         <View style={styles.col}>
-          {left1.map((wp, i) => (
-            <WallpaperCard key={wp._id} wallpaper={wp} tall={i % 3 === 1} />
+          {left1.map(({ wp, rank }, i) => (
+            <WallpaperCard key={wp._id} wallpaper={wp} tall={i % 3 === 1} rank={showRank ? rank : undefined} />
           ))}
         </View>
         <View style={styles.col}>
-          {right1.map((wp, i) => (
-            <WallpaperCard key={wp._id} wallpaper={wp} tall={i % 3 === 0} />
+          {right1.map(({ wp, rank }, i) => (
+            <WallpaperCard key={wp._id} wallpaper={wp} tall={i % 3 === 0} rank={showRank ? rank : undefined} />
           ))}
         </View>
       </View>
@@ -54,13 +55,13 @@ export default function MasonryGrid({ wallpapers }: Props) {
       {remaining.length > 0 && (
         <View style={[styles.row, { marginTop: 0 }]}>
           <View style={styles.col}>
-            {left2.map((wp, i) => (
-              <WallpaperCard key={wp._id} wallpaper={wp} tall={i % 3 === 1} />
+            {left2.map(({ wp, rank }, i) => (
+              <WallpaperCard key={wp._id} wallpaper={wp} tall={i % 3 === 1} rank={showRank ? rank : undefined} />
             ))}
           </View>
           <View style={styles.col}>
-            {right2.map((wp, i) => (
-              <WallpaperCard key={wp._id} wallpaper={wp} tall={i % 3 === 0} />
+            {right2.map(({ wp, rank }, i) => (
+              <WallpaperCard key={wp._id} wallpaper={wp} tall={i % 3 === 0} rank={showRank ? rank : undefined} />
             ))}
           </View>
         </View>

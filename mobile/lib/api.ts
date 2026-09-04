@@ -86,6 +86,9 @@ export const api = {
 
   featured: (): Promise<Wallpaper[]> => apiFetch('/wallpapers/featured'),
 
+  communityTop: (period: 'daily' | 'weekly' = 'daily'): Promise<Wallpaper[]> =>
+    apiFetch(`/wallpapers/community-top?period=${period}`),
+
   random: (): Promise<Wallpaper> => apiFetch('/wallpapers/random'),
 
   wallpaper: async (id: string): Promise<Wallpaper> => {

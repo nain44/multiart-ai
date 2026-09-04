@@ -8,6 +8,7 @@ interface Wallpaper {
   title: string;
   thumbnailUrl: string;
   isPremium: boolean;
+  isFeatured: boolean;
   downloadCount: number;
   resolution: string;
   source: string;
@@ -21,14 +22,16 @@ export default function WallpapersPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState('');
+  const [featuredOnly, setFeaturedOnly] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  async function load(p = 1, q = '') {
+  async function load(p = 1, q = '', featOnly = featuredOnly) {
     setLoading(true);
     try {
       const params: any = { page: p, limit: 15 };
       if (q) params.search = q;
+      if (featOnly) params.isFeatured = 'true';
       const data = await wallpaperApi.list(params);
       setWallpapers(data.wallpapers);
       setTotalPages(data.pagination.pages);
@@ -65,12 +68,36 @@ export default function WallpapersPage() {
     }
   }
 
+  async function toggleFeatured(wp: Wallpaper) {
+    try {
+      await wallpaperApi.update(wp._id, {
+        isFeatured: !wp.isFeatured,
+        ...(!wp.isFeatured ? { featuredAt: new Date().toISOString() } : {}),
+      });
+      setMsg({
+        type: 'success',
+        text: wp.isFeatured ? 'Removed from initial/featured picks.' : 'Pinned to initial/featured picks.',
+      });
+      load(page, search);
+    } catch (err: any) {
+      setMsg({ type: 'error', text: err.message });
+    }
+  }
+
+  function toggleFeaturedFilter() {
+    const next = !featuredOnly;
+    setFeaturedOnly(next);
+    load(1, search, next);
+  }
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
           <h1 style={{ fontSize: '28px', fontWeight: 700 }}>Wallpapers</h1>
-          <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>Manage your wallpaper collection.</p>
+          <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
+            Manage your wallpaper collection. 📌 Pin wallpapers to control which ones show first in the app.
+          </p>
         </div>
         <a href="/dashboard/upload" className="btn btn-primary">⬆️ Upload New</a>
       </div>
@@ -88,6 +115,13 @@ export default function WallpapersPage() {
         />
         <button className="btn btn-ghost btn-sm" onClick={() => load(1, search)}>Search</button>
         {search && <button className="btn btn-ghost btn-sm" onClick={() => { setSearch(''); load(1, ''); }}>Clear</button>}
+        <button
+          className={`btn btn-sm ${featuredOnly ? 'btn-primary' : 'btn-ghost'}`}
+          style={{ marginLeft: 'auto' }}
+          onClick={toggleFeaturedFilter}
+        >
+          📌 Featured only
+        </button>
       </div>
 
       {/* Table */}
@@ -138,13 +172,22 @@ export default function WallpapersPage() {
                   {new Date(wp.createdAt).toLocaleDateString()}
                 </td>
                 <td>
-                  <button
-                    className="btn btn-danger btn-sm"
-                    disabled={deleting === wp._id}
-                    onClick={() => handleDelete(wp._id, wp.title)}
-                  >
-                    {deleting === wp._id ? <span className="spinner" /> : '🗑️'}
-                  </button>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button
+                      className={`btn btn-sm ${wp.isFeatured ? 'btn-primary' : 'btn-ghost'}`}
+                      title={wp.isFeatured ? 'Unpin from initial/featured picks' : 'Pin to initial/featured picks'}
+                      onClick={() => toggleFeatured(wp)}
+                    >
+                      📌
+                    </button>
+                    <button
+                      className="btn btn-danger btn-sm"
+                      disabled={deleting === wp._id}
+                      onClick={() => handleDelete(wp._id, wp.title)}
+                    >
+                      {deleting === wp._id ? <span className="spinner" /> : '🗑️'}
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

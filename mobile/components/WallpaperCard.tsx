@@ -9,12 +9,15 @@ const COLUMN_GAP = 12;
 const PADDING = 16;
 const CARD_WIDTH = (width - PADDING * 2 - COLUMN_GAP) / 2;
 
+const RANK_MEDALS: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
+
 interface Props {
   wallpaper: Wallpaper;
   tall?: boolean; // alternate height for masonry feel
+  rank?: number; // when set, shows a rank badge (e.g. in Community Top lists)
 }
 
-export default function WallpaperCard({ wallpaper, tall = false }: Props) {
+export default function WallpaperCard({ wallpaper, tall = false, rank }: Props) {
   const cardHeight = tall ? CARD_WIDTH * 1.6 : CARD_WIDTH * 1.2;
 
   return (
@@ -33,6 +36,11 @@ export default function WallpaperCard({ wallpaper, tall = false }: Props) {
       />
       {/* Gradient overlay */}
       <View style={styles.overlay} />
+      {rank && (
+        <View style={styles.rankBadge}>
+          <Text style={styles.rankBadgeText}>{RANK_MEDALS[rank] || `#${rank}`}</Text>
+        </View>
+      )}
       {/* Bottom info */}
       <View style={styles.info}>
         {wallpaper.isPremium && (
@@ -60,6 +68,21 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'transparent',
     // Simulated gradient via bottom gradient view
+  },
+  rankBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rankBadgeText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
   info: {
     position: 'absolute',
