@@ -58,6 +58,9 @@ export const wallpaperApi = {
   delete: (id: string) =>
     request(`/wallpapers/${id}`, { method: 'DELETE' }),
 
+  bulkDelete: (ids: string[]) =>
+    request(`/wallpapers/bulk-delete`, { method: 'POST', body: JSON.stringify({ ids }) }),
+
   aiQueue: (status: 'pending' | 'approved' | 'rejected' = 'pending') =>
     request(`/wallpapers/admin/ai-queue?status=${status}`),
 

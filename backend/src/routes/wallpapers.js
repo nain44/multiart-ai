@@ -309,6 +309,36 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 });
 
 /**
+ * POST /api/wallpapers/bulk-delete
+ * Permanently deletes multiple wallpapers and their Cloudinary images
+ */
+router.post('/bulk-delete', authMiddleware, async (req, res) => {
+  const { ids } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ message: 'ids must be a non-empty array' });
+  }
+
+  const wallpapers = await Wallpaper.find({ _id: { $in: ids } });
+
+  const categoryDecrements = {};
+  for (const wallpaper of wallpapers) {
+    await deleteFromCloudinary(wallpaper.cloudinaryId);
+    const key = String(wallpaper.category);
+    categoryDecrements[key] = (categoryDecrements[key] || 0) + 1;
+  }
+
+  await Wallpaper.deleteMany({ _id: { $in: wallpapers.map((wp) => wp._id) } });
+
+  await Promise.all(
+    Object.entries(categoryDecrements).map(([categoryId, count]) =>
+      Category.findByIdAndUpdate(categoryId, { $inc: { wallpaperCount: -count } })
+    )
+  );
+
+  res.json({ message: `${wallpapers.length} wallpaper(s) deleted successfully`, deletedCount: wallpapers.length });
+});
+
+/**
  * GET /api/wallpapers/admin/stats
  * Quick stats for dashboard
  */

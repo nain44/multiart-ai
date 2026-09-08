@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { wallpaperApi } from '../../../lib/api';
+import ConfirmDialog from '../../../components/ConfirmDialog';
 
 interface QueueItem {
   _id: string;
@@ -27,6 +28,8 @@ export default function AiQueuePage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [clearing, setClearing] = useState(false);
   const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [confirmClearAll, setConfirmClearAll] = useState(false);
 
   async function load(status: QueueItem['approvalStatus']) {
     setLoading(true);
@@ -55,8 +58,27 @@ export default function AiQueuePage() {
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm('Permanently delete this wallpaper and its image? This cannot be undone.')) return;
+  async function handleApproveAndFeature(id: string) {
+    setBusyId(id);
+    try {
+      await wallpaperApi.approve(id);
+      await wallpaperApi.update(id, { isFeatured: true, featuredAt: new Date().toISOString() });
+      setMsg({ type: 'success', text: 'Wallpaper approved, public, and pinned to featured picks.' });
+      load(tab);
+    } catch (err: any) {
+      setMsg({ type: 'error', text: err.message });
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  function handleDelete(id: string) {
+    setConfirmDeleteId(id);
+  }
+
+  async function confirmDelete() {
+    if (!confirmDeleteId) return;
+    const id = confirmDeleteId;
     setBusyId(id);
     try {
       await wallpaperApi.delete(id);
@@ -66,28 +88,27 @@ export default function AiQueuePage() {
       setMsg({ type: 'error', text: err.message });
     } finally {
       setBusyId(null);
+      setConfirmDeleteId(null);
     }
   }
 
-  async function handleClearRejected() {
+  function handleClearRejected() {
     if (items.length === 0) return;
-    if (!confirm(`Permanently delete all ${items.length} rejected wallpaper(s)? This cannot be undone.`)) return;
+    setConfirmClearAll(true);
+  }
+
+  async function confirmClearRejected() {
     setClearing(true);
-    let failed = 0;
-    for (const item of items) {
-      try {
-        await wallpaperApi.delete(item._id);
-      } catch {
-        failed++;
-      }
+    try {
+      await wallpaperApi.bulkDelete(items.map((item) => item._id));
+      setMsg({ type: 'success', text: 'All rejected wallpapers permanently deleted.' });
+      load(tab);
+    } catch (err: any) {
+      setMsg({ type: 'error', text: err.message });
+    } finally {
+      setClearing(false);
+      setConfirmClearAll(false);
     }
-    setClearing(false);
-    setMsg(
-      failed === 0
-        ? { type: 'success', text: 'All rejected wallpapers permanently deleted.' }
-        : { type: 'error', text: `Deleted ${items.length - failed} of ${items.length}; ${failed} failed.` }
-    );
-    load(tab);
   }
 
   async function handleReject(id: string) {
@@ -157,7 +178,7 @@ export default function AiQueuePage() {
                 {item.category?.name || '—'} · {new Date(item.createdAt).toLocaleDateString()}
               </div>
               {tab === 'pending' && (
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   <button
                     className="btn btn-primary btn-sm"
                     style={{ flex: 1 }}
@@ -174,10 +195,18 @@ export default function AiQueuePage() {
                   >
                     ❌ Reject
                   </button>
+                  <button
+                    className="btn btn-sm"
+                    style={{ flex: '1 1 100%' }}
+                    disabled={busyId === item._id}
+                    onClick={() => handleApproveAndFeature(item._id)}
+                  >
+                    📌 Approve & Feature
+                  </button>
                 </div>
               )}
               {tab === 'rejected' && (
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   <button
                     className="btn btn-primary btn-sm"
                     style={{ flex: 1 }}
@@ -193,6 +222,14 @@ export default function AiQueuePage() {
                     onClick={() => handleDelete(item._id)}
                   >
                     🗑️ Delete
+                  </button>
+                  <button
+                    className="btn btn-sm"
+                    style={{ flex: '1 1 100%' }}
+                    disabled={busyId === item._id || clearing}
+                    onClick={() => handleApproveAndFeature(item._id)}
+                  >
+                    📌 Approve & Feature
                   </button>
                 </div>
               )}
@@ -210,6 +247,26 @@ export default function AiQueuePage() {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!confirmDeleteId}
+        title="Delete wallpaper?"
+        message="Permanently delete this wallpaper and its image? This cannot be undone."
+        confirmLabel="Delete"
+        busy={!!busyId}
+        onConfirm={confirmDelete}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
+
+      <ConfirmDialog
+        open={confirmClearAll}
+        title="Clear all rejected?"
+        message={`Permanently delete all ${items.length} rejected wallpaper(s)? This cannot be undone.`}
+        confirmLabel="Delete All"
+        busy={clearing}
+        onConfirm={confirmClearRejected}
+        onCancel={() => setConfirmClearAll(false)}
+      />
     </div>
   );
 }
