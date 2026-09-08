@@ -57,7 +57,7 @@ router.get('/', async (req, res) => {
 /**
  * GET /api/wallpapers/featured
  * Admin-picked wallpapers (isFeatured, most recently pinned first) fill the
- * hero/featured section first; any remaining slots (up to 12) are filled by
+ * hero/featured section first; any remaining slots (up to 20) are filled by
  * download count, same as before curation existed.
  */
 router.get('/featured', async (req, res) => {
@@ -66,10 +66,10 @@ router.get('/featured', async (req, res) => {
   const pinned = await Wallpaper.find({ ...baseQuery, isFeatured: true })
     .populate('category', 'name slug')
     .sort({ featuredAt: -1 })
-    .limit(12)
+    .limit(20)
     .select('-cloudinaryId');
 
-  if (pinned.length >= 12) {
+  if (pinned.length >= 20) {
     return res.json(pinned);
   }
 
@@ -79,7 +79,7 @@ router.get('/featured', async (req, res) => {
   })
     .populate('category', 'name slug')
     .sort({ downloadCount: -1 })
-    .limit(12 - pinned.length)
+    .limit(20 - pinned.length)
     .select('-cloudinaryId');
 
   res.json([...pinned, ...fillers]);
