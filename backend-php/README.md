@@ -17,10 +17,12 @@ strings shaped like MongoDB ObjectIds, and responses use the same field names
 1. `composer install`
 2. Copy `.env.example` to `.env` and fill in DB credentials, `JWT_SECRET`,
    Cloudinary keys, and optional Pexels/Unsplash keys.
-3. Create the database and load the schema:
+3. Create the database and load the schema. The schema seeds a few rows with
+   emoji icons, so force a UTF-8 client charset on import — without it, some
+   MySQL clients (notably on Windows) silently mangle the emoji bytes:
    ```
    mysql -u root -p -e "CREATE DATABASE multiart_ai CHARACTER SET utf8mb4"
-   mysql -u root -p multiart_ai < database/schema.sql
+   mysql --default-character-set=utf8mb4 -u root -p multiart_ai < database/schema.sql
    ```
 4. Point your webserver's document root at `public/`, or for local dev:
    ```

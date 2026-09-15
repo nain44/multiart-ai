@@ -2,10 +2,23 @@
 
 declare(strict_types=1);
 
+// When run via `php -S ... public/index.php` (see README), the built-in
+// server hands every request to this script — including real static files
+// under public/. Let it serve those directly instead of 404ing through our
+// router. A real webserver's rewrite rules already skip real files before
+// ever reaching this script, so this only matters for local dev.
+if (PHP_SAPI === 'cli-server') {
+    $requestedFile = __DIR__ . parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    if ($requestedFile !== __DIR__ . '/' && is_file($requestedFile)) {
+        return false;
+    }
+}
+
 require dirname(__DIR__) . '/vendor/autoload.php';
 
 use App\Controllers\AuthController;
 use App\Controllers\HomeController;
+use App\Controllers\Public\SiteController;
 use App\Controllers\Wallpapers\AiQueueController;
 use App\Controllers\Wallpapers\CategoryController;
 use App\Controllers\Wallpapers\DashboardController;
@@ -27,36 +40,49 @@ $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
 $path = rtrim($path, '/') ?: '/';
 
 $routes = [
-    ['GET', '#^/login$#', [AuthController::class, 'showLogin']],
-    ['POST', '#^/login$#', [AuthController::class, 'login']],
-    ['POST', '#^/logout$#', [AuthController::class, 'logout']],
+    // ── public wallpapers website (root namespace — matches the old site's real URLs) ──
+    ['GET', '#^/$#', [SiteController::class, 'home']],
+    ['GET', '#^/wallpapers$#', [SiteController::class, 'wallpapersList']],
+    ['GET', '#^/wallpapers/(?P<id>[^/]+)$#', [SiteController::class, 'wallpaperDetail']],
+    ['GET', '#^/categories$#', [SiteController::class, 'categoriesList']],
+    ['GET', '#^/categories/(?P<slug>[^/]+)$#', [SiteController::class, 'categoryDetail']],
+    ['GET', '#^/privacy-policy$#', [SiteController::class, 'privacyPolicy']],
+    ['GET', '#^/terms$#', [SiteController::class, 'terms']],
+    ['POST', '#^/api/track-download$#', [SiteController::class, 'trackDownload']],
+    ['GET', '#^/sitemap\.xml$#', [SiteController::class, 'sitemap']],
+    ['GET', '#^/robots\.txt$#', [SiteController::class, 'robots']],
 
-    ['GET', '#^/$#', [HomeController::class, 'index']],
-    ['GET', '#^/apps/(?P<key>[^/]+)$#', [HomeController::class, 'show']],
-    ['POST', '#^/apps$#', [HomeController::class, 'create']],
-    ['POST', '#^/apps/(?P<id>[^/]+)/update$#', [HomeController::class, 'update']],
-    ['POST', '#^/apps/(?P<id>[^/]+)/delete$#', [HomeController::class, 'destroy']],
+    // ── admin panel (super-admin only, under /admin) ──
+    ['GET', '#^/admin/login$#', [AuthController::class, 'showLogin']],
+    ['POST', '#^/admin/login$#', [AuthController::class, 'login']],
+    ['POST', '#^/admin/logout$#', [AuthController::class, 'logout']],
 
-    ['GET', '#^/wallpapers/dashboard$#', [DashboardController::class, 'index']],
+    ['GET', '#^/admin/?$#', [HomeController::class, 'index']],
+    ['GET', '#^/admin/apps/(?P<key>[^/]+)$#', [HomeController::class, 'show']],
+    ['POST', '#^/admin/apps$#', [HomeController::class, 'create']],
+    ['POST', '#^/admin/apps/(?P<id>[^/]+)/update$#', [HomeController::class, 'update']],
+    ['POST', '#^/admin/apps/(?P<id>[^/]+)/delete$#', [HomeController::class, 'destroy']],
 
-    ['GET', '#^/wallpapers/categories$#', [CategoryController::class, 'index']],
-    ['POST', '#^/wallpapers/categories$#', [CategoryController::class, 'create']],
-    ['POST', '#^/wallpapers/categories/(?P<id>[^/]+)/delete$#', [CategoryController::class, 'destroy']],
+    ['GET', '#^/admin/wallpapers/dashboard$#', [DashboardController::class, 'index']],
 
-    ['GET', '#^/wallpapers/upload$#', [UploadController::class, 'show']],
-    ['POST', '#^/wallpapers/upload$#', [UploadController::class, 'store']],
+    ['GET', '#^/admin/wallpapers/categories$#', [CategoryController::class, 'index']],
+    ['POST', '#^/admin/wallpapers/categories$#', [CategoryController::class, 'create']],
+    ['POST', '#^/admin/wallpapers/categories/(?P<id>[^/]+)/delete$#', [CategoryController::class, 'destroy']],
 
-    ['GET', '#^/wallpapers/ai-queue$#', [AiQueueController::class, 'index']],
-    ['POST', '#^/wallpapers/ai-queue/(?P<id>[^/]+)/approve$#', [AiQueueController::class, 'approve']],
-    ['POST', '#^/wallpapers/ai-queue/(?P<id>[^/]+)/reject$#', [AiQueueController::class, 'reject']],
-    ['POST', '#^/wallpapers/ai-queue/(?P<id>[^/]+)/delete$#', [AiQueueController::class, 'delete']],
-    ['POST', '#^/wallpapers/ai-queue/clear-rejected$#', [AiQueueController::class, 'clearRejected']],
+    ['GET', '#^/admin/wallpapers/upload$#', [UploadController::class, 'show']],
+    ['POST', '#^/admin/wallpapers/upload$#', [UploadController::class, 'store']],
 
-    ['POST', '#^/wallpapers/bulk-delete$#', [WallpaperController::class, 'bulkDelete']],
-    ['POST', '#^/wallpapers/(?P<id>[^/]+)/toggle-premium$#', [WallpaperController::class, 'togglePremium']],
-    ['POST', '#^/wallpapers/(?P<id>[^/]+)/toggle-featured$#', [WallpaperController::class, 'toggleFeatured']],
-    ['POST', '#^/wallpapers/(?P<id>[^/]+)/delete$#', [WallpaperController::class, 'destroy']],
-    ['GET', '#^/wallpapers$#', [WallpaperController::class, 'index']],
+    ['GET', '#^/admin/wallpapers/ai-queue$#', [AiQueueController::class, 'index']],
+    ['POST', '#^/admin/wallpapers/ai-queue/(?P<id>[^/]+)/approve$#', [AiQueueController::class, 'approve']],
+    ['POST', '#^/admin/wallpapers/ai-queue/(?P<id>[^/]+)/reject$#', [AiQueueController::class, 'reject']],
+    ['POST', '#^/admin/wallpapers/ai-queue/(?P<id>[^/]+)/delete$#', [AiQueueController::class, 'delete']],
+    ['POST', '#^/admin/wallpapers/ai-queue/clear-rejected$#', [AiQueueController::class, 'clearRejected']],
+
+    ['POST', '#^/admin/wallpapers/bulk-delete$#', [WallpaperController::class, 'bulkDelete']],
+    ['POST', '#^/admin/wallpapers/(?P<id>[^/]+)/toggle-premium$#', [WallpaperController::class, 'togglePremium']],
+    ['POST', '#^/admin/wallpapers/(?P<id>[^/]+)/toggle-featured$#', [WallpaperController::class, 'toggleFeatured']],
+    ['POST', '#^/admin/wallpapers/(?P<id>[^/]+)/delete$#', [WallpaperController::class, 'destroy']],
+    ['GET', '#^/admin/wallpapers$#', [WallpaperController::class, 'index']],
 ];
 
 try {

@@ -30,12 +30,12 @@ class HomeController
         }
         if (!$app) {
             Session::flash('error', 'Unknown app.');
-            header('Location: /');
+            header('Location: /admin/');
             exit;
         }
 
         if ($app['adminModule'] === 'wallpapers') {
-            header('Location: /wallpapers/dashboard');
+            header('Location: /admin/wallpapers/dashboard');
             exit;
         }
 
@@ -61,7 +61,7 @@ class HomeController
             Session::flash('error', $e->getMessage());
         }
 
-        header('Location: /');
+        header('Location: /admin/');
         exit;
     }
 
@@ -84,7 +84,7 @@ class HomeController
             Session::flash('error', $e->getMessage());
         }
 
-        header('Location: /');
+        header('Location: /admin/');
         exit;
     }
 
@@ -100,7 +100,7 @@ class HomeController
             Session::flash('error', $e->getMessage());
         }
 
-        header('Location: /');
+        header('Location: /admin/');
         exit;
     }
 }

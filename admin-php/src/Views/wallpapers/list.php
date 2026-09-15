@@ -10,20 +10,27 @@ use App\Support\View;
   <p class="muted"><?= (int) $pagination['total'] ?> total</p>
 </div>
 
-<form method="get" action="/wallpapers" class="toolbar">
+<form method="get" action="/admin/wallpapers" class="toolbar">
   <input type="search" name="search" placeholder="Search title or tags…" value="<?= View::e($search) ?>">
   <button class="btn btn-secondary" type="submit">Search</button>
   <?php if ($search !== '' || $featuredOnly): ?>
-    <a class="btn btn-secondary" href="/wallpapers">Clear</a>
+    <a class="btn btn-secondary" href="/admin/wallpapers">Clear</a>
   <?php endif; ?>
   <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
     <input type="checkbox" name="featured" value="1" style="width:auto;" <?= $featuredOnly ? 'checked' : '' ?>
            onchange="this.form.submit()">
-    Featured only
+    ⭐ Show featured only
   </label>
 </form>
 
-<form method="post" action="/wallpapers/bulk-delete" data-confirm="Delete the selected wallpapers? This can't be undone.">
+<?php if ($featuredOnly && empty($wallpapers)): ?>
+  <div class="alert alert-error">
+    No wallpapers are marked as featured yet. Click "☆ Feature it" on any row below (uncheck this filter first) to add one —
+    featured wallpapers appear first on the app's home screen.
+  </div>
+<?php endif; ?>
+
+<form method="post" action="/admin/wallpapers/bulk-delete" data-confirm="Delete the selected wallpapers? This can't be undone.">
   <input type="hidden" name="ids" id="bulk-ids" value="[]">
   <div class="toolbar">
     <button class="btn btn-danger btn-sm" id="bulk-delete-btn" type="submit" disabled>
@@ -44,6 +51,7 @@ use App\Support\View;
             <th>Resolution</th>
             <th>Downloads</th>
             <th>Access</th>
+            <th>Featured</th>
             <th>Created</th>
             <th></th>
           </tr>
@@ -65,26 +73,27 @@ use App\Support\View;
               <td><?= View::e($wp['resolution']) ?></td>
               <td><?= (int) $wp['downloadCount'] ?></td>
               <td>
-                <form method="post" action="/wallpapers/<?= View::e($wp['_id']) ?>/toggle-premium">
+                <form method="post" action="/admin/wallpapers/<?= View::e($wp['_id']) ?>/toggle-premium">
                   <input type="hidden" name="isPremium" value="<?= $wp['isPremium'] ? 'false' : 'true' ?>">
                   <button class="badge <?= $wp['isPremium'] ? 'badge-premium' : 'badge-free' ?>" type="submit">
                     <?= $wp['isPremium'] ? 'Premium' : 'Free' ?>
                   </button>
                 </form>
               </td>
+              <td>
+                <form method="post" action="/admin/wallpapers/<?= View::e($wp['_id']) ?>/toggle-featured">
+                  <input type="hidden" name="isFeatured" value="<?= $wp['isFeatured'] ? 'false' : 'true' ?>">
+                  <button class="badge <?= $wp['isFeatured'] ? 'badge-featured' : 'badge-not-featured' ?>" type="submit">
+                    <?= $wp['isFeatured'] ? '⭐ Featured' : '☆ Feature it' ?>
+                  </button>
+                </form>
+              </td>
               <td class="muted"><?= View::e(substr($wp['createdAt'] ?? '', 0, 10)) ?></td>
               <td>
-                <div style="display:flex; gap:6px;">
-                  <form method="post" action="/wallpapers/<?= View::e($wp['_id']) ?>/toggle-featured">
-                    <input type="hidden" name="isFeatured" value="<?= $wp['isFeatured'] ? 'false' : 'true' ?>">
-                    <button class="icon-btn" type="submit" title="<?= $wp['isFeatured'] ? 'Unfeature' : 'Feature' ?>"
-                            style="<?= $wp['isFeatured'] ? 'border-color:var(--accent); color:var(--accent-light);' : '' ?>">📌</button>
-                  </form>
-                  <form method="post" action="/wallpapers/<?= View::e($wp['_id']) ?>/delete"
-                        data-confirm="Permanently delete &quot;<?= View::e($wp['title']) ?>&quot;?">
-                    <button class="icon-btn" type="submit" title="Delete">🗑️</button>
-                  </form>
-                </div>
+                <form method="post" action="/admin/wallpapers/<?= View::e($wp['_id']) ?>/delete"
+                      data-confirm="Permanently delete &quot;<?= View::e($wp['title']) ?>&quot;?">
+                  <button class="icon-btn" type="submit" title="Delete">🗑️</button>
+                </form>
               </td>
             </tr>
           <?php endforeach; ?>

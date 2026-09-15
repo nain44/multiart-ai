@@ -86,14 +86,14 @@ class AiQueueController
             Session::flash('error', $e->getMessage());
         }
 
-        header('Location: /wallpapers/ai-queue?status=rejected');
+        header('Location: /admin/wallpapers/ai-queue?status=rejected');
         exit;
     }
 
     private function back()
     {
         $status = $_POST['status'] ?? 'pending';
-        header('Location: /wallpapers/ai-queue?status=' . urlencode($status));
+        header('Location: /admin/wallpapers/ai-queue?status=' . urlencode($status));
         exit;
     }
 }

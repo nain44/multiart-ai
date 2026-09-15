@@ -31,15 +31,15 @@
 </div>
 
 <div class="grid grid-3" style="margin-top:24px;">
-  <a class="card app-card" href="/wallpapers/upload">
+  <a class="card app-card" href="/admin/wallpapers/upload">
     <div class="icon">⬆️</div>
     <div class="name">Upload a wallpaper</div>
   </a>
-  <a class="card app-card" href="/wallpapers">
+  <a class="card app-card" href="/admin/wallpapers">
     <div class="icon">🖼️</div>
     <div class="name">Manage wallpapers</div>
   </a>
-  <a class="card app-card" href="/wallpapers/categories">
+  <a class="card app-card" href="/admin/wallpapers/categories">
     <div class="icon">🗃️</div>
     <div class="name">Manage categories</div>
   </a>

@@ -24,7 +24,7 @@ use App\Support\Session;
   <div class="card" style="margin-top:28px; max-width:480px;">
     <h2>Register a new app</h2>
     <p class="muted" style="margin-top:-6px;">Add a placeholder now; wire up its admin module later.</p>
-    <form method="post" action="/apps">
+    <form method="post" action="/admin/apps">
       <div class="form-row">
         <div class="field">
           <label for="icon">Icon</label>

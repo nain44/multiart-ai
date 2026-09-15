@@ -10,7 +10,7 @@ $emojis = ['🌿','🚀','🎨','🚗','🏙️','🦁','🌑','⬜','🌊','�
 <div class="grid grid-2" style="align-items:start;">
   <div class="card">
     <h2>Add category</h2>
-    <form method="post" action="/wallpapers/categories">
+    <form method="post" action="/admin/wallpapers/categories">
       <label for="icon">Icon</label>
       <div class="emoji-pick">
         <?php foreach ($emojis as $e): ?>
@@ -59,7 +59,7 @@ $emojis = ['🌿','🚀','🎨','🚗','🏙️','🦁','🌑','⬜','🌊','�
               <td><?= (int) $cat['wallpaperCount'] ?></td>
               <td><?= (int) $cat['order'] ?></td>
               <td>
-                <form method="post" action="/wallpapers/categories/<?= View::e($cat['_id']) ?>/delete"
+                <form method="post" action="/admin/wallpapers/categories/<?= View::e($cat['_id']) ?>/delete"
                       data-confirm="Deactivate &quot;<?= View::e($cat['name']) ?>&quot;? It stays in the database but stops showing in the app.">
                   <button class="icon-btn" type="submit" title="Deactivate">🗑️</button>
                 </form>

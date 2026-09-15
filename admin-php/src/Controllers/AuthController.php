@@ -12,7 +12,7 @@ class AuthController
     public function showLogin()
     {
         if (Session::token()) {
-            header('Location: /');
+            header('Location: /admin/');
             exit;
         }
         View::renderBare('login');
@@ -26,10 +26,10 @@ class AuthController
         try {
             $result = (new ApiClient())->post('/api/auth/login', ['email' => $email, 'password' => $password]);
             Session::login($result['token'], $result['admin']);
-            header('Location: /');
+            header('Location: /admin/');
         } catch (ApiException $e) {
             Session::flash('error', $e->getMessage());
-            header('Location: /login');
+            header('Location: /admin/login');
         }
         exit;
     }
@@ -37,7 +37,7 @@ class AuthController
     public function logout()
     {
         Session::logout();
-        header('Location: /login');
+        header('Location: /admin/login');
         exit;
     }
 }

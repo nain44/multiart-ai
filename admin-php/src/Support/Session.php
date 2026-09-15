@@ -47,7 +47,7 @@ class Session
     public static function requireAuth(): void
     {
         if (!self::token()) {
-            header('Location: /login');
+            header('Location: /admin/login');
             exit;
         }
     }
@@ -57,7 +57,7 @@ class Session
         self::requireAuth();
         if (!self::isSuper()) {
             self::flash('error', 'Only a super admin can do that.');
-            header('Location: /');
+            header('Location: /admin/');
             exit;
         }
     }

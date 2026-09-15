@@ -20,7 +20,7 @@ use App\Support\View;
       <div class="alert alert-<?= View::e($flash['type']) ?>"><?= View::e($flash['message']) ?></div>
     <?php endif; ?>
 
-    <form method="post" action="/login">
+    <form method="post" action="/admin/login">
       <div class="field">
         <label for="email">Email</label>
         <input id="email" name="email" type="email" required autofocus>

@@ -18,7 +18,7 @@ use App\Support\Session;
 <?php if (Session::isSuper()): ?>
   <div class="card" style="margin-top:22px; max-width:480px;">
     <h2>Edit app</h2>
-    <form method="post" action="/apps/<?= View::e($app['_id']) ?>/update">
+    <form method="post" action="/admin/apps/<?= View::e($app['_id']) ?>/update">
       <div class="form-row">
         <div class="field">
           <label for="icon">Icon</label>
@@ -49,7 +49,7 @@ use App\Support\Session;
     </form>
   </div>
 
-  <form method="post" action="/apps/<?= View::e($app['_id']) ?>/delete" data-confirm="Remove &quot;<?= View::e($app['name']) ?>&quot; from the app registry?" style="margin-top:14px;">
+  <form method="post" action="/admin/apps/<?= View::e($app['_id']) ?>/delete" data-confirm="Remove &quot;<?= View::e($app['name']) ?>&quot; from the app registry?" style="margin-top:14px;">
     <button class="btn btn-danger btn-sm" type="submit">Remove app</button>
   </form>
 <?php endif; ?>

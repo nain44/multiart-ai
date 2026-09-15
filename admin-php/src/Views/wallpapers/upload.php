@@ -6,7 +6,7 @@ use App\Support\View;
   <h1>Upload a wallpaper</h1>
 </div>
 
-<form method="post" action="/wallpapers/upload" enctype="multipart/form-data" class="card" style="max-width:560px;">
+<form method="post" action="/admin/wallpapers/upload" enctype="multipart/form-data" class="card" style="max-width:560px;">
   <div class="field">
     <label>Image</label>
     <div class="dropzone" id="dropzone">

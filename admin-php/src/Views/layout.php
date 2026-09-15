@@ -20,15 +20,15 @@ use App\Support\View;
   <aside class="sidebar">
     <div class="brand"><span class="badge">🛠️</span> Super Admin</div>
     <nav>
-      <a class="nav-link <?= $module === null ? 'active' : '' ?>" href="/">🗂️ All Apps</a>
+      <a class="nav-link <?= $module === null ? 'active' : '' ?>" href="/admin/">🗂️ All Apps</a>
 
       <?php if ($module === 'wallpapers'): ?>
         <div class="section-label">🖼️ Wallpapers</div>
-        <a class="nav-link <?= $active === 'dashboard' ? 'active' : '' ?>" href="/wallpapers/dashboard">📊 Dashboard</a>
-        <a class="nav-link <?= $active === 'upload' ? 'active' : '' ?>" href="/wallpapers/upload">⬆️ Upload</a>
-        <a class="nav-link <?= $active === 'wallpapers' ? 'active' : '' ?>" href="/wallpapers">🖼️ Wallpapers</a>
-        <a class="nav-link <?= $active === 'ai-queue' ? 'active' : '' ?>" href="/wallpapers/ai-queue">🤖 AI Review Queue</a>
-        <a class="nav-link <?= $active === 'categories' ? 'active' : '' ?>" href="/wallpapers/categories">🗃️ Categories</a>
+        <a class="nav-link <?= $active === 'dashboard' ? 'active' : '' ?>" href="/admin/wallpapers/dashboard">📊 Dashboard</a>
+        <a class="nav-link <?= $active === 'upload' ? 'active' : '' ?>" href="/admin/wallpapers/upload">⬆️ Upload</a>
+        <a class="nav-link <?= $active === 'wallpapers' ? 'active' : '' ?>" href="/admin/wallpapers">🖼️ Wallpapers</a>
+        <a class="nav-link <?= $active === 'ai-queue' ? 'active' : '' ?>" href="/admin/wallpapers/ai-queue">🤖 AI Review Queue</a>
+        <a class="nav-link <?= $active === 'categories' ? 'active' : '' ?>" href="/admin/wallpapers/categories">🗃️ Categories</a>
       <?php endif; ?>
     </nav>
     <?php if ($admin): ?>
@@ -36,7 +36,7 @@ use App\Support\View;
         <?= View::e($admin['name']) ?> · <?= View::e($admin['role']) ?>
       </div>
     <?php endif; ?>
-    <form method="post" action="/logout">
+    <form method="post" action="/admin/logout">
       <button class="logout-btn" type="submit">⏻ Log out</button>
     </form>
   </aside>

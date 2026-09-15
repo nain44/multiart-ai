@@ -12,7 +12,7 @@ class View
     }
 
     /** Renders a view inside the shared dashboard layout (sidebar + topbar + flash banner). */
-    public static function render(string $view, array $data = []): never
+    public static function render(string $view, array $data = [])
     {
         $content = self::capture($view, $data);
         self::capture('layout', array_merge($data, [
@@ -24,9 +24,25 @@ class View
     }
 
     /** Renders a bare view with no layout (e.g. the login page). */
-    public static function renderBare(string $view, array $data = []): never
+    public static function renderBare(string $view, array $data = [])
     {
         self::capture($view, array_merge($data, ['flash' => Session::consumeFlash()]), true);
+        exit;
+    }
+
+    /** Renders a view inside the public wallpapers site's layout (navbar + footer). */
+    public static function renderSite(string $view, array $data = [])
+    {
+        $content = self::capture($view, $data);
+        self::capture('site/layout', array_merge($data, ['content' => $content]), true);
+        exit;
+    }
+
+    /** Renders raw (non-HTML) output with a given Content-Type — e.g. sitemap.xml, robots.txt. */
+    public static function renderRaw(string $body, string $contentType)
+    {
+        header("Content-Type: {$contentType}; charset=utf-8");
+        echo $body;
         exit;
     }
 

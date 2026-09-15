@@ -36,7 +36,7 @@ class CategoryController
             Session::flash('error', $e->getMessage());
         }
 
-        header('Location: /wallpapers/categories');
+        header('Location: /admin/wallpapers/categories');
         exit;
     }
 
@@ -51,7 +51,7 @@ class CategoryController
             Session::flash('error', $e->getMessage());
         }
 
-        header('Location: /wallpapers/categories');
+        header('Location: /admin/wallpapers/categories');
         exit;
     }
 }

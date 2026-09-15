@@ -26,12 +26,12 @@ class UploadController
         $file = $_FILES['image'] ?? null;
         if (!$file || $file['error'] !== UPLOAD_ERR_OK) {
             Session::flash('error', 'Please choose an image file.');
-            header('Location: /wallpapers/upload');
+            header('Location: /admin/wallpapers/upload');
             exit;
         }
         if (empty($_POST['category'])) {
             Session::flash('error', 'Please choose a category.');
-            header('Location: /wallpapers/upload');
+            header('Location: /admin/wallpapers/upload');
             exit;
         }
 
@@ -51,10 +51,10 @@ class UploadController
         try {
             Session::client()->postMultipart('/api/wallpapers', $fields);
             Session::flash('success', 'Wallpaper uploaded.');
-            header('Location: /wallpapers');
+            header('Location: /admin/wallpapers');
         } catch (ApiException $e) {
             Session::flash('error', $e->getMessage());
-            header('Location: /wallpapers/upload');
+            header('Location: /admin/wallpapers/upload');
         }
         exit;
     }
