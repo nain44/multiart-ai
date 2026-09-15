@@ -30,6 +30,14 @@ use App\Support\View;
         <a class="nav-link <?= $active === 'ai-queue' ? 'active' : '' ?>" href="/admin/wallpapers/ai-queue">🤖 AI Review Queue</a>
         <a class="nav-link <?= $active === 'categories' ? 'active' : '' ?>" href="/admin/wallpapers/categories">🗃️ Categories</a>
       <?php endif; ?>
+
+      <?php if ($module === 'multistocks'): ?>
+        <div class="section-label">📈 MultiStocks AI</div>
+        <a class="nav-link <?= $active === 'dashboard' ? 'active' : '' ?>" href="/admin/multistocks/dashboard">📊 Dashboard</a>
+        <a class="nav-link <?= $active === 'prompts' ? 'active' : '' ?>" href="/admin/multistocks/prompts">🧠 AI Prompt Controls</a>
+        <a class="nav-link <?= $active === 'fetchers' ? 'active' : '' ?>" href="/admin/multistocks/fetchers">🌍 Market Fetchers</a>
+        <a class="nav-link <?= $active === 'settings' ? 'active' : '' ?>" href="/admin/multistocks/settings">🔑 Keys &amp; System Logs</a>
+      <?php endif; ?>
     </nav>
     <?php if ($admin): ?>
       <div class="muted" style="padding:8px 12px; font-size:12px;">

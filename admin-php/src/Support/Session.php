@@ -43,6 +43,12 @@ class Session
         return new ApiClient(self::token());
     }
 
+    /** Client for the separate MultiStocks AI backend (no auth of its own). */
+    public static function multiStocksClient(): ApiClient
+    {
+        return new ApiClient(null, $_ENV['MULTISTOCKS_API_URL'] ?? 'https://bmultistocksai.paynovatechnologies.com');
+    }
+
     /** Redirects to /login if not authenticated. Called at the top of protected pages. */
     public static function requireAuth(): void
     {

@@ -8,6 +8,21 @@ use App\Support\View;
 
 class HomeController
 {
+    /**
+     * Maps an app's `admin_module` value to the built-in module's dashboard
+     * route. Shared by show() below and by src/Views/apps/index.php (via
+     * HomeController::moduleRoute()) so the two never drift out of sync.
+     */
+    private const MODULE_ROUTES = [
+        'wallpapers' => '/admin/wallpapers/dashboard',
+        'multistocks' => '/admin/multistocks/dashboard',
+    ];
+
+    public static function moduleRoute(?string $adminModule): ?string
+    {
+        return self::MODULE_ROUTES[$adminModule] ?? null;
+    }
+
     /** GET / — the super-admin's app grid. */
     public function index()
     {
@@ -34,8 +49,8 @@ class HomeController
             exit;
         }
 
-        if ($app['adminModule'] === 'wallpapers') {
-            header('Location: /admin/wallpapers/dashboard');
+        if ($route = self::moduleRoute($app['adminModule'])) {
+            header('Location: ' . $route);
             exit;
         }
 

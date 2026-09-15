@@ -19,6 +19,10 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 use App\Controllers\AuthController;
 use App\Controllers\HomeController;
 use App\Controllers\Public\SiteController;
+use App\Controllers\MultiStocks\DashboardController as MultiStocksDashboardController;
+use App\Controllers\MultiStocks\FetchersController;
+use App\Controllers\MultiStocks\PromptController;
+use App\Controllers\MultiStocks\SettingsController;
 use App\Controllers\Wallpapers\AiQueueController;
 use App\Controllers\Wallpapers\CategoryController;
 use App\Controllers\Wallpapers\DashboardController;
@@ -83,6 +87,26 @@ $routes = [
     ['POST', '#^/admin/wallpapers/(?P<id>[^/]+)/toggle-featured$#', [WallpaperController::class, 'toggleFeatured']],
     ['POST', '#^/admin/wallpapers/(?P<id>[^/]+)/delete$#', [WallpaperController::class, 'destroy']],
     ['GET', '#^/admin/wallpapers$#', [WallpaperController::class, 'index']],
+
+    // ── MultiStocks AI admin module (proxies its own, separate backend) ──
+    ['GET', '#^/admin/multistocks/dashboard$#', [MultiStocksDashboardController::class, 'index']],
+
+    ['GET', '#^/admin/multistocks/prompts$#', [PromptController::class, 'show']],
+    ['POST', '#^/admin/multistocks/prompts$#', [PromptController::class, 'update']],
+
+    ['GET', '#^/admin/multistocks/fetchers$#', [FetchersController::class, 'show']],
+    ['POST', '#^/admin/multistocks/fetchers/trigger$#', [FetchersController::class, 'trigger']],
+    ['POST', '#^/admin/multistocks/fetchers/save$#', [FetchersController::class, 'save']],
+    ['POST', '#^/admin/multistocks/fetchers/ticker/add$#', [FetchersController::class, 'addTicker']],
+    ['POST', '#^/admin/multistocks/fetchers/ticker/remove$#', [FetchersController::class, 'removeTicker']],
+    ['POST', '#^/admin/multistocks/fetchers/add$#', [FetchersController::class, 'addMarket']],
+    ['POST', '#^/admin/multistocks/fetchers/delete$#', [FetchersController::class, 'deleteMarket']],
+
+    ['GET', '#^/admin/multistocks/settings$#', [SettingsController::class, 'show']],
+    ['GET', '#^/admin/multistocks/settings/logs$#', [SettingsController::class, 'logs']],
+    ['POST', '#^/admin/multistocks/settings/keys$#', [SettingsController::class, 'updateKeys']],
+    ['POST', '#^/admin/multistocks/settings/mobile-url$#', [SettingsController::class, 'updateMobileUrl']],
+    ['POST', '#^/admin/multistocks/settings/ads$#', [SettingsController::class, 'updateAds']],
 ];
 
 try {

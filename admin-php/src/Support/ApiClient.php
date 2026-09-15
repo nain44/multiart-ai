@@ -3,18 +3,19 @@
 namespace App\Support;
 
 /**
- * Thin server-side HTTP client to backend-php's /api/* routes. The admin
+ * Thin server-side HTTP client to a backend's /api/* routes. The admin
  * panel is a backend-for-frontend: browsers only ever talk to this PHP app,
- * which relays authenticated requests to the actual API.
+ * which relays requests to the actual API — normally backend-php, but any
+ * app registered with its own apiBaseUrl can get its own client instance.
  */
 class ApiClient
 {
     private string $baseUrl;
     private ?string $token;
 
-    public function __construct(?string $token = null)
+    public function __construct(?string $token = null, ?string $baseUrl = null)
     {
-        $this->baseUrl = rtrim($_ENV['BACKEND_API_URL'] ?? 'http://localhost:5000', '/');
+        $this->baseUrl = rtrim($baseUrl ?? $_ENV['BACKEND_API_URL'] ?? 'http://localhost:5000', '/');
         $this->token = $token;
     }
 

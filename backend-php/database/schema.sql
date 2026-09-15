@@ -102,4 +102,4 @@ CREATE TABLE IF NOT EXISTS apps (
 INSERT IGNORE INTO apps (id, `key`, name, description, icon, status, admin_module, `order`) VALUES
   (LEFT(MD5(CONCAT(NOW(6), RAND(), 'wallpapers')), 24), 'wallpapers', 'MultiArt AI / Wallverse', 'Shared wallpaper catalog powering both the MultiArt AI and Wallverse mobile apps.', '🖼️', 'active', 'wallpapers', 0),
   (LEFT(MD5(CONCAT(NOW(6), RAND(), 'phone-activity-app')), 24), 'phone-activity-app', 'Phone Activity App', 'Not yet connected to this admin.', '📱', 'coming_soon', NULL, 10),
-  (LEFT(MD5(CONCAT(NOW(6), RAND(), 'multistocks-ai')), 24), 'multistocks-ai', 'MultiStocks AI', 'Not yet connected to this admin.', '📈', 'coming_soon', NULL, 20);
+  (LEFT(MD5(CONCAT(NOW(6), RAND(), 'multistocks-ai')), 24), 'multistocks-ai', 'MultiStocks AI', 'AI-powered stock advisor for PSX and global markets.', '📈', 'active', 'multistocks', 20);

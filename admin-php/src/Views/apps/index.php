@@ -1,5 +1,6 @@
 <?php
 /** @var array $apps */
+use App\Controllers\HomeController;
 use App\Support\View;
 use App\Support\Session;
 ?>
@@ -10,7 +11,7 @@ use App\Support\Session;
 
 <div class="grid grid-3">
   <?php foreach ($apps as $app): ?>
-    <?php $href = $app['adminModule'] === 'wallpapers' ? '/admin/wallpapers/dashboard' : '/admin/apps/' . rawurlencode($app['key']); ?>
+    <?php $href = HomeController::moduleRoute($app['adminModule']) ?? '/admin/apps/' . rawurlencode($app['key']); ?>
     <a class="card app-card" href="<?= View::e($href) ?>">
       <div class="icon"><?= $app['icon'] ?></div>
       <div class="name"><?= View::e($app['name']) ?></div>
