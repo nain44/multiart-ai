@@ -80,3 +80,26 @@ CREATE TABLE IF NOT EXISTS device_quotas (
   updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   UNIQUE KEY uniq_device_quotas_device_date (device_id, `date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Registry of every product the super-admin panel manages. `wallpapers` (this
+-- backend) is the first entry; future products (their own separate backends)
+-- register here so the admin can list/link them even before they're wired up.
+CREATE TABLE IF NOT EXISTS apps (
+  id CHAR(24) PRIMARY KEY,
+  `key` VARCHAR(64) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  description TEXT NULL,
+  icon VARCHAR(32) NOT NULL DEFAULT '📱',
+  status ENUM('active', 'coming_soon', 'inactive') NOT NULL DEFAULT 'coming_soon',
+  admin_module VARCHAR(64) NULL, -- built-in admin section slug (e.g. 'wallpapers'), NULL = placeholder only
+  api_base_url VARCHAR(500) NULL, -- for a future app with its own separate backend
+  `order` INT NOT NULL DEFAULT 0,
+  created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  UNIQUE KEY uniq_apps_key (`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT IGNORE INTO apps (id, `key`, name, description, icon, status, admin_module, `order`) VALUES
+  (LEFT(MD5(CONCAT(NOW(6), RAND(), 'wallpapers')), 24), 'wallpapers', 'MultiArt AI / Wallverse', 'Shared wallpaper catalog powering both the MultiArt AI and Wallverse mobile apps.', '🖼️', 'active', 'wallpapers', 0),
+  (LEFT(MD5(CONCAT(NOW(6), RAND(), 'phone-activity-app')), 24), 'phone-activity-app', 'Phone Activity App', 'Not yet connected to this admin.', '📱', 'coming_soon', NULL, 10),
+  (LEFT(MD5(CONCAT(NOW(6), RAND(), 'multistocks-ai')), 24), 'multistocks-ai', 'MultiStocks AI', 'Not yet connected to this admin.', '📈', 'coming_soon', NULL, 20);

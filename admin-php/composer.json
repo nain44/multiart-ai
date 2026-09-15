@@ -1,0 +1,16 @@
+{
+  "name": "multiart-ai/admin-php",
+  "description": "Super-admin panel: talks to backend-php over its /api/* HTTP API (server-side, no framework).",
+  "type": "project",
+  "require": {
+    "php": ">=8.0",
+    "ext-curl": "*",
+    "ext-json": "*",
+    "vlucas/phpdotenv": "^5.6"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/"
+    }
+  }
+}

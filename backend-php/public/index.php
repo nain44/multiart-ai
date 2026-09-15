@@ -5,6 +5,7 @@ declare(strict_types=1);
 require dirname(__DIR__) . '/vendor/autoload.php';
 
 use App\Controllers\AiController;
+use App\Controllers\AppController;
 use App\Controllers\AuthController;
 use App\Controllers\CategoryController;
 use App\Controllers\ExploreController;
@@ -68,6 +69,12 @@ $routes = [
     ['POST', '#^/api/auth/login$#', [AuthController::class, 'login']],
     ['POST', '#^/api/auth/setup$#', [AuthController::class, 'setup']],
     ['GET', '#^/api/auth/me$#', [AuthController::class, 'me']],
+
+    // ── apps registry (super-admin) ──
+    ['GET', '#^/api/apps$#', [AppController::class, 'index']],
+    ['POST', '#^/api/apps$#', [AppController::class, 'create']],
+    ['PUT', '#^/api/apps/(?P<id>[^/]+)$#', [AppController::class, 'update']],
+    ['DELETE', '#^/api/apps/(?P<id>[^/]+)$#', [AppController::class, 'destroy']],
 
     // ── categories ──
     ['GET', '#^/api/categories$#', [CategoryController::class, 'index']],
