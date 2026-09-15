@@ -22,10 +22,11 @@ use App\Controllers\Public\SiteController;
 use App\Controllers\MultiStocks\DashboardController as MultiStocksDashboardController;
 use App\Controllers\MultiStocks\FetchersController;
 use App\Controllers\MultiStocks\PromptController;
-use App\Controllers\MultiStocks\SettingsController;
+use App\Controllers\MultiStocks\SettingsController as MultiStocksSettingsController;
 use App\Controllers\Wallpapers\AiQueueController;
 use App\Controllers\Wallpapers\CategoryController;
 use App\Controllers\Wallpapers\DashboardController;
+use App\Controllers\Wallpapers\SettingsController as WallpaperSettingsController;
 use App\Controllers\Wallpapers\UploadController;
 use App\Controllers\Wallpapers\WallpaperController;
 use App\Support\ApiException;
@@ -102,11 +103,14 @@ $routes = [
     ['POST', '#^/admin/multistocks/fetchers/add$#', [FetchersController::class, 'addMarket']],
     ['POST', '#^/admin/multistocks/fetchers/delete$#', [FetchersController::class, 'deleteMarket']],
 
-    ['GET', '#^/admin/multistocks/settings$#', [SettingsController::class, 'show']],
-    ['GET', '#^/admin/multistocks/settings/logs$#', [SettingsController::class, 'logs']],
-    ['POST', '#^/admin/multistocks/settings/keys$#', [SettingsController::class, 'updateKeys']],
-    ['POST', '#^/admin/multistocks/settings/mobile-url$#', [SettingsController::class, 'updateMobileUrl']],
-    ['POST', '#^/admin/multistocks/settings/ads$#', [SettingsController::class, 'updateAds']],
+    ['GET', '#^/admin/multistocks/settings$#', [MultiStocksSettingsController::class, 'show']],
+    ['GET', '#^/admin/multistocks/settings/logs$#', [MultiStocksSettingsController::class, 'logs']],
+    ['POST', '#^/admin/multistocks/settings/keys$#', [MultiStocksSettingsController::class, 'updateKeys']],
+    ['POST', '#^/admin/multistocks/settings/mobile-url$#', [MultiStocksSettingsController::class, 'updateMobileUrl']],
+    ['POST', '#^/admin/multistocks/settings/ads$#', [MultiStocksSettingsController::class, 'updateAds']],
+
+    ['GET', '#^/admin/wallpapers/settings$#', [WallpaperSettingsController::class, 'show']],
+    ['POST', '#^/admin/wallpapers/settings$#', [WallpaperSettingsController::class, 'update']],
 ];
 
 try {

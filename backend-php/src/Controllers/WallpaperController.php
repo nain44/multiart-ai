@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Auth;
 use App\Models\CategoryModel;
+use App\Models\SettingModel;
 use App\Models\WallpaperModel;
 use App\Services\CloudinaryService;
 use App\Support\Request;
@@ -11,7 +12,7 @@ use App\Support\Response;
 
 class WallpaperController
 {
-    private const FEATURED_LIMIT = 8;
+    private const FEATURED_LIMIT_DEFAULT = 30;
 
     /** Batch-populates the `category` field for a list of wallpaper rows. */
     private function hydrate(array $rows, bool $includeCloudinaryId = false): array
@@ -27,7 +28,7 @@ class WallpaperController
     public function index()
     {
         $page = (int) Request::query('page', 1);
-        $limit = (int) Request::query('limit', 20);
+        $limit = (int) Request::query('limit', SettingModel::getInt('default_page_size', 20));
         $category = Request::query('category');
         $isPremium = Request::query('isPremium');
         $isFeatured = Request::query('isFeatured');
@@ -64,27 +65,28 @@ class WallpaperController
     /**
      * GET /api/wallpapers/featured
      * Admin-picked wallpapers (isFeatured, most recently pinned first) fill the
-     * hero/featured section first; remaining slots (up to FEATURED_LIMIT) are
-     * filled by download count.
+     * hero/featured section first; remaining slots (up to the `featured_limit`
+     * setting, editable from the admin) are filled by download count.
      */
     public function featured()
     {
+        $limit = SettingModel::getInt('featured_limit', self::FEATURED_LIMIT_DEFAULT);
         $base = ['isActive' => true, 'visibility' => 'public', 'approvalStatus' => 'approved'];
 
         $pinned = WallpaperModel::findMany(
             array_merge($base, ['isFeatured' => true]),
             'featured_at DESC',
-            self::FEATURED_LIMIT
+            $limit
         );
 
-        if (count($pinned) >= self::FEATURED_LIMIT) {
+        if (count($pinned) >= $limit) {
             Response::json($this->hydrate($pinned));
         }
 
         $fillers = WallpaperModel::findMany(
             array_merge($base, ['idNotIn' => array_column($pinned, 'id')]),
             'download_count DESC',
-            self::FEATURED_LIMIT - count($pinned)
+            $limit - count($pinned)
         );
 
         Response::json($this->hydrate(array_merge($pinned, $fillers)));

@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\CategoryModel;
 use App\Models\DeviceQuotaModel;
+use App\Models\SettingModel;
 use App\Models\WallpaperModel;
 use App\Services\CloudinaryService;
 use App\Services\ContentFilter;
@@ -13,7 +14,7 @@ use App\Support\Response;
 class AiController
 {
     // Anti-abuse safety net, not the product's free/premium quota (that's client-side).
-    private const MAX_GENERATIONS_PER_DEVICE_PER_DAY = 50;
+    private const MAX_GENERATIONS_PER_DEVICE_PER_DAY_DEFAULT = 50;
 
     /** POST /api/ai/generate */
     public function generate()
@@ -41,8 +42,9 @@ class AiController
         try {
             $quota = null;
             if ($deviceId) {
+                $dailyLimit = SettingModel::getInt('ai_daily_quota', self::MAX_GENERATIONS_PER_DEVICE_PER_DAY_DEFAULT);
                 $quota = DeviceQuotaModel::findOrCreateToday($deviceId);
-                if ((int) $quota['count'] >= self::MAX_GENERATIONS_PER_DEVICE_PER_DAY) {
+                if ((int) $quota['count'] >= $dailyLimit) {
                     Response::error('Daily AI generation limit reached for this device. Please try again tomorrow.', 429);
                 }
             }

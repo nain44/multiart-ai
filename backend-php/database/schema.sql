@@ -103,3 +103,18 @@ INSERT IGNORE INTO apps (id, `key`, name, description, icon, status, admin_modul
   (LEFT(MD5(CONCAT(NOW(6), RAND(), 'wallpapers')), 24), 'wallpapers', 'MultiArt AI / Wallverse', 'Shared wallpaper catalog powering both the MultiArt AI and Wallverse mobile apps.', '🖼️', 'active', 'wallpapers', 0),
   (LEFT(MD5(CONCAT(NOW(6), RAND(), 'phone-activity-app')), 24), 'phone-activity-app', 'Phone Activity App', 'Not yet connected to this admin.', '📱', 'coming_soon', NULL, 10),
   (LEFT(MD5(CONCAT(NOW(6), RAND(), 'multistocks-ai')), 24), 'multistocks-ai', 'MultiStocks AI', 'AI-powered stock advisor for PSX and global markets.', '📈', 'active', 'multistocks', 20);
+
+-- Simple key/value app settings, editable from the admin without a code change
+-- (e.g. how many wallpapers /api/wallpapers/featured returns, the daily AI
+-- generation quota per device).
+CREATE TABLE IF NOT EXISTS settings (
+  `key` VARCHAR(64) PRIMARY KEY,
+  value VARCHAR(500) NOT NULL,
+  updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT IGNORE INTO settings (`key`, value) VALUES
+  ('featured_limit', '30'),
+  ('ai_daily_quota', '50'),
+  ('default_page_size', '20'),
+  ('explore_results_per_source', '10');

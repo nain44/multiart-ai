@@ -29,6 +29,7 @@ use App\Support\View;
         <a class="nav-link <?= $active === 'wallpapers' ? 'active' : '' ?>" href="/admin/wallpapers">🖼️ Wallpapers</a>
         <a class="nav-link <?= $active === 'ai-queue' ? 'active' : '' ?>" href="/admin/wallpapers/ai-queue">🤖 AI Review Queue</a>
         <a class="nav-link <?= $active === 'categories' ? 'active' : '' ?>" href="/admin/wallpapers/categories">🗃️ Categories</a>
+        <a class="nav-link <?= $active === 'settings' ? 'active' : '' ?>" href="/admin/wallpapers/settings">⚙️ Settings</a>
       <?php endif; ?>
 
       <?php if ($module === 'multistocks'): ?>

@@ -9,6 +9,7 @@ use App\Controllers\AppController;
 use App\Controllers\AuthController;
 use App\Controllers\CategoryController;
 use App\Controllers\ExploreController;
+use App\Controllers\SettingsController;
 use App\Controllers\WallpaperController;
 use App\Support\Response;
 use Dotenv\Dotenv;
@@ -75,6 +76,10 @@ $routes = [
     ['POST', '#^/api/apps$#', [AppController::class, 'create']],
     ['PUT', '#^/api/apps/(?P<id>[^/]+)$#', [AppController::class, 'update']],
     ['DELETE', '#^/api/apps/(?P<id>[^/]+)$#', [AppController::class, 'destroy']],
+
+    // ── settings (admin) ──
+    ['GET', '#^/api/settings$#', [SettingsController::class, 'index']],
+    ['PUT', '#^/api/settings$#', [SettingsController::class, 'update']],
 
     // ── categories ──
     ['GET', '#^/api/categories$#', [CategoryController::class, 'index']],

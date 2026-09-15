@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\CategoryModel;
+use App\Models\SettingModel;
 use App\Models\WallpaperModel;
 use App\Support\Request;
 use App\Support\Response;
@@ -142,8 +143,9 @@ class ExploreController
             ], 'source DESC, created_at DESC', 30);
         }
 
-        $pexels = $this->fetchPexels($query, $page, 10);
-        $unsplash = $this->fetchUnsplash($query, $page, 10);
+        $perSource = SettingModel::getInt('explore_results_per_source', 10);
+        $pexels = $this->fetchPexels($query, $page, $perSource);
+        $unsplash = $this->fetchUnsplash($query, $page, $perSource);
         $photos = array_merge($pexels, $unsplash);
 
         $liveIds = [];
