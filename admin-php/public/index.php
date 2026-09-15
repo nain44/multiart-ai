@@ -101,14 +101,16 @@ try {
     http_response_code(404);
     echo 'Not found';
 } catch (ApiException $e) {
+    $fallback = str_starts_with($path, '/admin') ? '/admin/' : '/';
+
     if ($e->status === 401) {
         Session::logout();
         Session::flash('error', 'Your session expired. Please log in again.');
-        header('Location: /login');
+        header('Location: /admin/login');
         exit;
     }
     Session::flash('error', $e->getMessage());
     $refererPath = isset($_SERVER['HTTP_REFERER']) ? parse_url($_SERVER['HTTP_REFERER'], PHP_URL_PATH) : null;
-    header('Location: ' . ($refererPath ?: '/'));
+    header('Location: ' . ($refererPath ?: $fallback));
     exit;
 }

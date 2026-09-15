@@ -103,7 +103,7 @@ class WallpaperController
     private function back()
     {
         $ref = isset($_SERVER['HTTP_REFERER']) ? parse_url($_SERVER['HTTP_REFERER']) : null;
-        $target = $ref['path'] ?? '/wallpapers';
+        $target = $ref['path'] ?? '/admin/wallpapers';
         if (!empty($ref['query'])) {
             $target .= '?' . $ref['query'];
         }
