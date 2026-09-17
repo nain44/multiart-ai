@@ -56,8 +56,8 @@ class CategoryModel
     {
         $id = Id::generate();
         $stmt = Database::connection()->prepare(
-            'INSERT INTO categories (id, name, slug, icon, cover_image_url, description, `order`, is_active)
-             VALUES (?, ?, ?, ?, ?, ?, ?, 1)'
+            'INSERT INTO categories (id, name, slug, icon, cover_image_url, description, event_date, `order`, is_active)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)'
         );
         $stmt->execute([
             $id,
@@ -66,6 +66,7 @@ class CategoryModel
             $data['icon'] ?? '🖼️',
             $data['coverImageUrl'] ?? null,
             $data['description'] ?? null,
+            $data['eventDate'] ?? null,
             $data['order'] ?? 0,
         ]);
         return self::findById($id);
@@ -84,6 +85,7 @@ class CategoryModel
             'icon' => 'icon',
             'coverImageUrl' => 'cover_image_url',
             'description' => 'description',
+            'eventDate' => 'event_date',
             'order' => '`order`',
             'isActive' => 'is_active',
             'wallpaperCount' => 'wallpaper_count',
@@ -148,6 +150,7 @@ class CategoryModel
             'icon' => $category['icon'],
             'coverImageUrl' => $category['cover_image_url'],
             'description' => $category['description'],
+            'eventDate' => $category['event_date'],
             'order' => (int) $category['order'],
             'isActive' => (bool) $category['is_active'],
             'wallpaperCount' => (int) $category['wallpaper_count'],

@@ -49,6 +49,7 @@ class CategoryController
             'description' => Request::input('description'),
             'order' => Request::input('order', 0),
             'coverImageUrl' => Request::input('coverImageUrl'),
+            'eventDate' => Request::input('eventDate'),
         ]);
 
         Response::json(CategoryModel::toJson($category), 201);

@@ -20,6 +20,9 @@ CREATE TABLE IF NOT EXISTS categories (
   icon VARCHAR(32) NOT NULL DEFAULT '🖼️',
   cover_image_url TEXT NULL,
   description TEXT NULL,
+  -- Optional seasonal/holiday date: "MM-DD" recurs every year (Christmas, Valentine's);
+  -- a full "YYYY-MM-DD" is a one-off for shifting events like Eid, updated yearly by an admin.
+  event_date VARCHAR(10) NULL,
   `order` INT NOT NULL DEFAULT 0,
   is_active TINYINT(1) NOT NULL DEFAULT 1,
   wallpaper_count INT NOT NULL DEFAULT 0,
