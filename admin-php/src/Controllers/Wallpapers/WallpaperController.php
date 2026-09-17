@@ -17,6 +17,7 @@ class WallpaperController
         $page = max(1, (int) ($_GET['page'] ?? 1));
         $search = trim($_GET['search'] ?? '');
         $featuredOnly = ($_GET['featured'] ?? '') === '1';
+        $premiumOnly = ($_GET['premium'] ?? '') === '1';
 
         $query = ['page' => $page, 'limit' => self::PAGE_SIZE];
         if ($search !== '') {
@@ -24,6 +25,9 @@ class WallpaperController
         }
         if ($featuredOnly) {
             $query['isFeatured'] = 'true';
+        }
+        if ($premiumOnly) {
+            $query['isPremium'] = 'true';
         }
 
         $result = Session::client()->get('/api/wallpapers', $query);
@@ -33,6 +37,7 @@ class WallpaperController
             'pagination' => $result['pagination'] ?? ['page' => 1, 'pages' => 1, 'total' => 0],
             'search' => $search,
             'featuredOnly' => $featuredOnly,
+            'premiumOnly' => $premiumOnly,
             'module' => 'wallpapers',
             'active' => 'wallpapers',
         ]);

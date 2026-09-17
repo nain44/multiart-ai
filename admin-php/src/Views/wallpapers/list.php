@@ -2,7 +2,8 @@
 /** @var array $wallpapers
  *  @var array $pagination
  *  @var string $search
- *  @var bool $featuredOnly */
+ *  @var bool $featuredOnly
+ *  @var bool $premiumOnly */
 use App\Support\View;
 ?>
 <div class="page-header">
@@ -13,7 +14,7 @@ use App\Support\View;
 <form method="get" action="/admin/wallpapers" class="toolbar">
   <input type="search" name="search" placeholder="Search title or tags…" value="<?= View::e($search) ?>">
   <button class="btn btn-secondary" type="submit">Search</button>
-  <?php if ($search !== '' || $featuredOnly): ?>
+  <?php if ($search !== '' || $featuredOnly || $premiumOnly): ?>
     <a class="btn btn-secondary" href="/admin/wallpapers">Clear</a>
   <?php endif; ?>
   <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
@@ -21,12 +22,23 @@ use App\Support\View;
            onchange="this.form.submit()">
     ⭐ Show featured only
   </label>
+  <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
+    <input type="checkbox" name="premium" value="1" style="width:auto;" <?= $premiumOnly ? 'checked' : '' ?>
+           onchange="this.form.submit()">
+    👑 Show premium only
+  </label>
 </form>
 
 <?php if ($featuredOnly && empty($wallpapers)): ?>
   <div class="alert alert-error">
     No wallpapers are marked as featured yet. Click "☆ Feature it" on any row below (uncheck this filter first) to add one —
     featured wallpapers appear first on the app's home screen.
+  </div>
+<?php endif; ?>
+
+<?php if ($premiumOnly && empty($wallpapers)): ?>
+  <div class="alert alert-error">
+    No wallpapers are marked as premium yet. Click the "Free" badge on any row below (uncheck this filter first) to make one premium.
   </div>
 <?php endif; ?>
 
@@ -112,6 +124,7 @@ use App\Support\View;
     <?php
       $qs = fn($p) => '?' . http_build_query(array_filter([
           'page' => $p, 'search' => $search ?: null, 'featured' => $featuredOnly ? 1 : null,
+          'premium' => $premiumOnly ? 1 : null,
       ]));
     ?>
     <a class="btn btn-secondary btn-sm <?= $pagination['page'] <= 1 ? 'disabled' : '' ?>"
