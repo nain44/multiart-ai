@@ -73,6 +73,7 @@ $routes = [
     ['GET', '#^/admin/wallpapers/categories$#', [CategoryController::class, 'index']],
     ['POST', '#^/admin/wallpapers/categories$#', [CategoryController::class, 'create']],
     ['POST', '#^/admin/wallpapers/categories/(?P<id>[^/]+)/delete$#', [CategoryController::class, 'destroy']],
+    ['POST', '#^/admin/wallpapers/categories/(?P<id>[^/]+)/event-date$#', [CategoryController::class, 'updateEventDate']],
 
     ['GET', '#^/admin/wallpapers/upload$#', [UploadController::class, 'show']],
     ['POST', '#^/admin/wallpapers/upload$#', [UploadController::class, 'store']],

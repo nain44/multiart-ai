@@ -30,8 +30,26 @@ class CategoryController
                 'icon' => $_POST['icon'] ?: '🖼️',
                 'description' => $_POST['description'] ?? null,
                 'order' => (int) ($_POST['order'] ?? 0),
+                'eventDate' => trim($_POST['eventDate'] ?? '') ?: null,
             ]);
             Session::flash('success', 'Category created.');
+        } catch (ApiException $e) {
+            Session::flash('error', $e->getMessage());
+        }
+
+        header('Location: /admin/wallpapers/categories');
+        exit;
+    }
+
+    public function updateEventDate(string $id)
+    {
+        Session::requireAuth();
+
+        $eventDate = trim($_POST['eventDate'] ?? '');
+
+        try {
+            Session::client()->put("/api/categories/{$id}", ['eventDate' => $eventDate ?: null]);
+            Session::flash('success', 'Event date updated.');
         } catch (ApiException $e) {
             Session::flash('error', $e->getMessage());
         }
