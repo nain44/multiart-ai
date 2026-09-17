@@ -45,6 +45,7 @@ export interface Category {
   wallpaperCount: number;
   isActive: boolean;
   order: number;
+  eventDate?: string | null;
 }
 
 export interface PaginatedResponse {

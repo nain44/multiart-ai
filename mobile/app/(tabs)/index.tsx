@@ -1,10 +1,9 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, Pressable,
   Dimensions, RefreshControl,
 } from 'react-native';
 import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { router, useFocusEffect } from 'expo-router';
 import { api, Wallpaper, Category } from '@/lib/api';
 import { Colors, Spacing, Radius } from '@/constants/Colors';
@@ -12,11 +11,9 @@ import MasonryGrid from '@/components/MasonryGrid';
 import WallpaperCard from '@/components/WallpaperCard';
 import CategoryChip from '@/components/CategoryChip';
 import SkeletonGrid from '@/components/SkeletonCard';
-import BannerAdComponent from '@/components/BannerAdComponent';
-import FancyAlert, { AlertButton } from '@/components/FancyAlert';
-import { showRewardedAd } from '@/lib/adService';
-import { usePremium } from '@/components/PremiumContext';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import SideDrawer from '@/components/SideDrawer';
+import EventBanner from '@/components/EventBanner';
+import { getUpcomingEventCategory } from '@/lib/eventReminder';
 
 const { width } = Dimensions.get('window');
 
@@ -27,84 +24,11 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const { isPremium } = usePremium();
-  const [remainingCreations, setRemainingCreations] = useState(3);
-  const [fancyAlert, setFancyAlert] = useState<{
-    visible: boolean;
-    title: string;
-    message: string;
-    icon: string;
-    buttons: AlertButton[];
-  }>({
-    visible: false,
-    title: '',
-    message: '',
-    icon: '💡',
-    buttons: [],
-  });
-
-  const showCustomAlert = (title: string, message: string, icon: string, buttons?: AlertButton[]) => {
-    setFancyAlert({
-      visible: true,
-      title,
-      message,
-      icon,
-      buttons: buttons || [],
-    });
-  };
-
-  async function loadCreations() {
-    try {
-      const val = await AsyncStorage.getItem('remaining_creations');
-      if (val !== null) {
-        setRemainingCreations(parseInt(val, 10));
-      } else {
-        await AsyncStorage.setItem('remaining_creations', '3');
-        setRemainingCreations(3);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  async function handleWatchAdForCreations() {
-    showCustomAlert(
-      'Watch Video Ad',
-      'Watch a short video ad to earn 3 free AI creations!',
-      '📺',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Watch Ad',
-          onPress: async () => {
-            const success = await showRewardedAd();
-            if (success) {
-              const current = remainingCreations;
-              const next = current + 3;
-              await AsyncStorage.setItem('remaining_creations', next.toString());
-              setRemainingCreations(next);
-              showCustomAlert(
-                'Reward Granted',
-                'You have successfully earned +3 AI Creations!',
-                '🎉'
-              );
-            } else {
-              showCustomAlert(
-                'Ad Closed',
-                'You must finish watching the ad to earn the creations reward.',
-                '⚠️'
-              );
-            }
-          }
-        }
-      ]
-    );
-  }
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const upcomingEvent = useMemo(() => getUpcomingEventCategory(categories), [categories]);
 
   async function load() {
     setError(null);
-    loadCreations();
     try {
       const [feat, cats] = await Promise.all([api.featured(), api.categories()]);
       setFeatured(feat);
@@ -151,29 +75,44 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={() => { setRefreshing(true); load(); }}
-          tintColor={Colors.accent}
-          colors={[Colors.accent]}
-        />
-      }
-    >
+    <View style={styles.container}>
+      {/* Top Bar Navigation */}
+      <View style={styles.topBar}>
+        <Pressable onPress={() => setDrawerOpen(true)} style={styles.iconBtn}>
+          <Text style={styles.iconText}>☰</Text>
+        </Pressable>
+        <Text style={styles.logoText}>MultiArt AI</Text>
+        <View style={styles.topBarActions}>
+          <Pressable onPress={() => router.push('/search')} style={styles.iconBtn}>
+            <Text style={styles.iconText}>🔍</Text>
+          </Pressable>
+          <Pressable onPress={() => router.push('/favorites')} style={styles.iconBtn}>
+            <Text style={styles.iconText}>❤️</Text>
+          </Pressable>
+        </View>
+      </View>
+
       {/* Hero Header */}
       <View style={styles.hero}>
         <View style={styles.heroGlow} />
-        <Pressable
-          style={styles.browseBtn}
-          onPress={() => router.push('/browse')}
-        >
-          <Text style={styles.browseBtnText}>Browse All →</Text>
-        </Pressable>
+        <View style={styles.heroActions}>
+          <Pressable
+            style={styles.browseBtn}
+            onPress={() => router.push('/browse')}
+          >
+            <Text style={styles.browseBtnText}>Browse All 🖼️</Text>
+          </Pressable>
+          <Pressable
+            style={styles.createBtn}
+            onPress={() => router.push('/generator')}
+          >
+            <Text style={styles.createBtnText}>Create AI 🎨</Text>
+          </Pressable>
+        </View>
       </View>
+
+      {/* Seasonal/holiday reminder */}
+      {upcomingEvent && <EventBanner category={upcomingEvent} />}
 
       {/* Categories */}
       {categories.length > 0 && (
@@ -187,6 +126,7 @@ export default function HomeScreen() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
+            style={styles.chipsScroll}
             contentContainerStyle={styles.chipsRow}
           >
             {categories.slice(0, 12).map((cat) => (
@@ -200,7 +140,19 @@ export default function HomeScreen() {
         </View>
       )}
 
-
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => { setRefreshing(true); load(); }}
+            tintColor={Colors.accent}
+            colors={[Colors.accent]}
+          />
+        }
+      >
       {/* Your Creations (own AI generations, private or pending - visible only to this device) */}
       {myCreations.length > 0 && (
         <View style={styles.section}>
@@ -237,90 +189,50 @@ export default function HomeScreen() {
         )}
       </View>
 
-      {/* Rewarded Ad Card (Creations Booster) */}
-      {!isPremium && (
-        <View style={styles.adCardContainer}>
-          <LinearGradient
-            colors={['#1c103a', '#0c051a']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.adCard}
-          >
-            <View style={styles.adCardLeft}>
-              <Text style={styles.adCardTitle}>📺 Watch Ad for AI Creations</Text>
-              <Text style={styles.adCardSubtitle}>
-                Get +3 free AI creations instantly. Remaining: {remainingCreations}
-              </Text>
-            </View>
-            <Pressable style={styles.adCardBtn} onPress={handleWatchAdForCreations}>
-              <Text style={styles.adCardBtnText}>Watch (+3)</Text>
-            </Pressable>
-          </LinearGradient>
-        </View>
-      )}
+      </ScrollView>
 
-      <FancyAlert
-        visible={fancyAlert.visible}
-        title={fancyAlert.title}
-        message={fancyAlert.message}
-        icon={fancyAlert.icon}
-        buttons={fancyAlert.buttons}
-        onClose={() => setFancyAlert((prev) => ({ ...prev, visible: false }))}
-      />
-    </ScrollView>
+      <SideDrawer isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
+  scroll: { flex: 1 },
   content: { paddingBottom: 40 },
-  adCardContainer: {
-    paddingHorizontal: Spacing.lg,
-    marginVertical: Spacing.md,
-  },
-  adCard: {
+  topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: Spacing.lg,
-    borderRadius: Radius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(139,92,246,0.3)',
+    paddingTop: 54,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.sm,
+    backgroundColor: Colors.bg,
   },
-  adCardLeft: {
-    flex: 1,
-    marginRight: Spacing.md,
+  topBarActions: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
   },
-  adCardTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: Colors.white,
-    marginBottom: 4,
-  },
-  adCardSubtitle: {
-    fontSize: 12,
-    color: Colors.textMuted,
-    lineHeight: 16,
-  },
-  adCardBtn: {
-    backgroundColor: Colors.accent,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 10,
+  iconBtn: {
+    width: 36,
+    height: 36,
     borderRadius: Radius.full,
-    shadowColor: Colors.accent,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
+    backgroundColor: Colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  adCardBtnText: {
-    color: Colors.white,
-    fontSize: 13,
-    fontWeight: '700',
+  iconText: {
+    fontSize: 16,
+    color: Colors.text,
+  },
+  logoText: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: Colors.text,
   },
   hero: {
     padding: Spacing.xl,
-    paddingTop: 60,
+    paddingTop: Spacing.lg,
     alignItems: 'center',
     position: 'relative',
     overflow: 'hidden',
@@ -367,11 +279,21 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
     paddingHorizontal: Spacing.md,
   },
+  heroActions: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    marginTop: Spacing.sm,
+    width: '100%',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.md,
+  },
   browseBtn: {
+    flex: 1,
     backgroundColor: Colors.accent,
-    paddingHorizontal: Spacing.xl,
     paddingVertical: 14,
     borderRadius: Radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: Colors.accent,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
@@ -380,9 +302,28 @@ const styles = StyleSheet.create({
   },
   browseBtnText: {
     color: Colors.white,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
-    letterSpacing: 0.3,
+  },
+  createBtn: {
+    flex: 1,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingVertical: 14,
+    borderRadius: Radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  createBtnText: {
+    color: Colors.text,
+    fontSize: 15,
+    fontWeight: '700',
   },
   section: {
     marginTop: Spacing.xxl,
@@ -407,6 +348,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.accent,
     fontWeight: '600',
+  },
+  chipsScroll: {
+    flexGrow: 0,
+    flexShrink: 0,
+    maxHeight: 52,
   },
   chipsRow: {
     paddingHorizontal: Spacing.lg,
