@@ -30,15 +30,16 @@ use App\Support\View;
   </div>
 <?php endif; ?>
 
-<form method="post" action="/admin/wallpapers/bulk-delete" data-confirm="Delete the selected wallpapers? This can't be undone.">
+<form method="post" action="/admin/wallpapers/bulk-delete" id="bulk-form" data-confirm="Delete the selected wallpapers? This can't be undone.">
   <input type="hidden" name="ids" id="bulk-ids" value="[]">
   <div class="toolbar">
     <button class="btn btn-danger btn-sm" id="bulk-delete-btn" type="submit" disabled>
       Delete selected (<span id="bulk-count">0</span>)
     </button>
   </div>
+</form>
 
-  <div class="card" style="padding:0; overflow-x:auto;">
+<div class="card" style="padding:0; overflow-x:auto;">
     <?php if (empty($wallpapers)): ?>
       <div class="empty-state">No wallpapers found.</div>
     <?php else: ?>
@@ -62,7 +63,11 @@ use App\Support\View;
               <td><input type="checkbox" class="row-check" name="check" value="<?= View::e($wp['_id']) ?>"></td>
               <td>
                 <div style="display:flex; align-items:center; gap:10px;">
-                  <img class="thumb" src="<?= View::e($wp['thumbnailUrl']) ?>" alt="">
+                  <div class="thumb-wrap">
+                    <img class="thumb" src="<?= View::e($wp['thumbnailUrl']) ?>" alt="">
+                    <?php if ($wp['isFeatured']): ?><span class="thumb-badge thumb-badge-featured" title="Featured">⭐</span><?php endif; ?>
+                    <?php if ($wp['isPremium']): ?><span class="thumb-badge thumb-badge-premium" title="Premium">👑</span><?php endif; ?>
+                  </div>
                   <div>
                     <?= View::e($wp['title']) ?><br>
                     <span class="muted"><?= View::e($wp['source']) ?></span>
@@ -101,7 +106,6 @@ use App\Support\View;
       </table>
     <?php endif; ?>
   </div>
-</form>
 
 <?php if ($pagination['pages'] > 1): ?>
   <div class="pagination">
