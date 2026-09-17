@@ -32,7 +32,7 @@ router.get('/:slug', async (req, res) => {
  * Create a new category
  */
 router.post('/', authMiddleware, async (req, res) => {
-  const { name, slug, icon, description, order, coverImageUrl } = req.body;
+  const { name, slug, icon, description, order, coverImageUrl, eventDate } = req.body;
 
   if (!name || !slug) {
     return res.status(400).json({ message: 'Name and slug are required' });
@@ -43,7 +43,7 @@ router.post('/', authMiddleware, async (req, res) => {
     return res.status(409).json({ message: 'A category with this slug already exists' });
   }
 
-  const category = new Category({ name, slug, icon, description, order, coverImageUrl });
+  const category = new Category({ name, slug, icon, description, order, coverImageUrl, eventDate: eventDate || null });
   await category.save();
   res.status(201).json(category);
 });
